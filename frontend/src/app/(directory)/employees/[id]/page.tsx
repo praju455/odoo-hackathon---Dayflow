@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import ProfileView from "@/components/directory/ProfileView";
 import type { UserProfile } from "@/types/employee";
+import { YuIcon } from "@/components/ui/YuIcons";
 
 export default function EmployeeProfilePage() {
   const params = useParams();
@@ -59,18 +60,13 @@ export default function EmployeeProfilePage() {
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="flex items-center gap-5 rounded-[28px] border border-white/10 bg-[#050505] p-6">
-          <div className="h-20 w-20 rounded-full bg-white/10" />
+      <div className="max-w-4xl mx-auto space-y-6 pb-[100px] mt-8">
+        <div className="bg-field border border-[var(--border-default)] rounded-[16px] p-8 flex gap-6 items-center shadow-sm animate-pulse">
+          <div className="h-[88px] w-[88px] rounded-[16px] bg-[var(--bg-canvas)]" />
           <div className="space-y-3 flex-1">
-            <div className="h-5 w-48 rounded bg-white/10" />
-            <div className="h-4 w-32 rounded bg-white/5" />
+            <div className="h-6 w-48 rounded bg-[var(--bg-canvas)]" />
+            <div className="h-4 w-32 rounded bg-[var(--bg-canvas)]" />
           </div>
-        </div>
-        <div className="space-y-4 rounded-[28px] border border-white/10 bg-[#050505] p-6">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-4 w-full rounded bg-white/5" />
-          ))}
         </div>
       </div>
     );
@@ -79,14 +75,19 @@ export default function EmployeeProfilePage() {
   // ── Error state ───────────────────────────────────────────────────────────
   if (error || !employee) {
     return (
-      <div className="space-y-3 rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
-        <p className="font-semibold text-red-700">{error ?? "Something went wrong."}</p>
-        <Link
-          href="/employees"
-          className="inline-block text-sm font-semibold text-emerald-700 hover:underline"
-        >
-          Back to Employees
-        </Link>
+      <div className="flex items-center justify-center h-[calc(100vh-100px)] px-4">
+        <div className="rounded-[16px] border border-[var(--border-default)] bg-field-on-canvas p-8 text-center max-w-sm shadow-sm space-y-4">
+          <div className="mx-auto flex h-[48px] w-[48px] items-center justify-center rounded-full" style={{ backgroundColor: "var(--red-50)" }}>
+            <YuIcon name="info-circle" width={24} height={24} className="text-[#f87171]" />
+          </div>
+          <p className="text-body-medium text-primary">{error ?? "Something went wrong."}</p>
+          <Link
+            href="/employees"
+            className="inline-block mt-4 px-5 py-2.5 rounded-[10px] text-body-medium font-semibold text-secondary bg-field hover:bg-field-on-canvas border border-[var(--border-default)] transition-all shadow-sm"
+          >
+            Back to Directory
+          </Link>
+        </div>
       </div>
     );
   }
@@ -95,12 +96,12 @@ export default function EmployeeProfilePage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <nav className="mb-4 flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/employees" className="font-semibold transition-colors hover:text-emerald-700">
+      <nav className="mb-4 flex items-center gap-2 text-body-small text-tertiary px-6 sm:px-8 mt-6">
+        <Link href="/employees" className="font-semibold transition-colors hover:text-primary">
           Employees
         </Link>
         <span>/</span>
-        <span className="font-semibold text-white">{employee.name}</span>
+        <span className="font-semibold text-primary">{employee.name}</span>
       </nav>
 
       <ProfileView

@@ -2,72 +2,209 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design tokens (shared with Member 3) ─────────────────────────────────── */
-:root {
-  /* Brand */
-  --color-primary: #3b82f6;       /* blue-500 */
-  --color-primary-hover: #2563eb; /* blue-600 */
-  --color-primary-light: #60a5fa; /* blue-400  */
+@layer base {
+  :root {
+    /* Yu Studio Dark Mode Adaptations */
+    --color-neutral-0: #050505;
+    --color-neutral-50: #0a0a0a;
+    --color-neutral-100: #1a1d25;
+    --color-neutral-200: rgba(255, 255, 255, 0.08);
+    --color-neutral-350: rgba(255, 255, 255, 0.15);
+    --color-neutral-400: rgba(255, 255, 255, 0.4);
+    --color-neutral-600: rgba(255, 255, 255, 0.65);
+    --color-neutral-700: #e2e4e6;
+    --color-neutral-850: #eff1f3;
+    --color-neutral-900: #ffffff;
+    --color-neutral-1000: #ffffff;
 
-  /* Status badges */
-  --color-present: #10b981;  /* emerald-500  */
-  --color-absent:  #ef4444;  /* red-500 */
-  --color-leave:   #8b5cf6;  /* violet-500 */
+    --color-ink-900: #ffffff;
+    --color-ink-800: #e5e5e5;
 
-  /* Surface */
-  --color-bg: #050505;       /* nearly black */
-  --color-card: #0a0a0a;     /* slightly lighter */
-  --color-border: rgba(255, 255, 255, 0.1);
+    /* Status hue pairs (Dark Mode Adjusted) */
+    --red-50: rgba(180, 35, 24, 0.15);
+    --red-700: #f87171;
+    --amber-50: rgba(166, 106, 8, 0.15);
+    --amber-700: #fbbf24;
+    --lime-50: rgba(69, 127, 25, 0.15);
+    --lime-700: #a3e635;
+    --green-50: rgba(20, 122, 58, 0.15);
+    --green-700: #4ade80;
+    --green-400: #07B93B;
 
-  /* Text */
-  --color-text-primary: #ffffff;   /* white */
-  --color-text-secondary: #9ca3af; /* gray-400 */
-  --color-text-muted: #6b7280;     /* gray-500 */
+    /* Semantic Roles */
+    --bg-canvas: var(--color-neutral-0);
+    --bg-sidebar: var(--color-neutral-50);
+    --bg-field: var(--color-neutral-100);
+    --bg-field-on-canvas: var(--color-neutral-50);
+    --bg-raised: var(--color-neutral-100);
+    --bg-primary: var(--color-ink-900);
+    --bg-primary-hover: var(--color-ink-800);
+    --bg-logo: var(--color-neutral-1000);
+
+    --text-primary: var(--color-neutral-900);
+    --text-secondary: var(--color-neutral-600);
+    --text-tertiary: var(--color-neutral-400);
+    --text-on-primary: #000000;
+
+    --border-default: var(--color-neutral-200);
+    --border-strong: var(--color-neutral-350);
+
+    --icon-default: var(--color-neutral-600);
+    --icon-muted: var(--color-neutral-400);
+    --icon-strong: var(--color-neutral-900);
+    --chart-line: var(--color-ink-900);
+  }
+
+  body {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-ink-900);
+    outline-offset: 2px;
+  }
 }
 
-/* ─── Base ──────────────────────────────────────────────────────────────────── */
-body {
-  font-family: var(--font-inter), system-ui, sans-serif;
-  background-color: #f5f6f3;
-  color: #0f172a;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ─── Utilities ─────────────────────────────────────────────────────────────── */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  /* Typography Classes */
+  .text-kpi-value {
+    font-weight: 600;
+    font-size: 31.5px;
+    line-height: 38px;
+    letter-spacing: -0.4px;
+  }
+  .text-heading-page {
+    font-weight: 600;
+    font-size: 23.5px;
+    line-height: 30px;
+    letter-spacing: -0.3px;
+  }
+  .text-heading-brand {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: -0.25px;
+  }
+  .text-body-large {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: 0;
+  }
+  .text-body-medium {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: -0.25px;
+  }
+  .text-body-regular {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: -0.1px;
+  }
+  .text-body-small {
+    font-weight: 400;
+    font-size: 12.5px;
+    line-height: 18px;
+    letter-spacing: 0;
+  }
+  .text-label-tab {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: -0.15px;
+  }
+  .text-label-score {
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 18px;
+    letter-spacing: 0;
+  }
+  .text-label-caps {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
 
-  /* Card shadow consistent across the app */
-  .card {
-    @apply bg-void-charcoal rounded-2xl shadow-xl border border-white/5 backdrop-blur-sm relative overflow-hidden;
+  /* Shadows */
+  .shadow-raised {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+  }
+  .shadow-floating {
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
   }
 
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+  /* Specific Media Query Behaviors */
+  @media (max-width: 1279px) {
+    .table-scroll-container {
+      overflow-x: auto;
+    }
+    .table-min-width {
+      min-width: 1160px;
+    }
+    .kpi-scroll-container, .tabs-scroll-container {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .kpi-scroll-container::-webkit-scrollbar, .tabs-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
   }
 
-  /* Primary button */
-  .btn-primary {
-    @apply bg-white hover:bg-gray-200 text-black font-semibold rounded-full
-           px-6 py-2.5 text-sm transition-all duration-300 disabled:opacity-50
-           disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)];
+  @media (min-width: 768px) and (max-width: 1023px) {
+    #sidebar.sidebar-collapsed {
+      width: 72px !important;
+      min-width: 72px !important;
+      max-width: 72px !important;
+    }
   }
 
-  /* Ghost / secondary button */
-  .btn-ghost {
-    @apply bg-transparent hover:bg-white/10 text-white font-medium rounded-full
-           px-6 py-2.5 text-sm transition-colors duration-150 border border-white/20;
-  }
-
-  .glass-nav {
-    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @media (max-width: 767px) {
+    #sidebar {
+      position: fixed;
+      left: -280px;
+      top: 0;
+      bottom: 0;
+      z-index: 50;
+      transition: left 300ms ease-out;
+    }
+    #sidebar.active {
+      left: 0;
+    }
+    .kpi-scroll {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .kpi-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .kpi-card {
+      scroll-snap-align: start;
+    }
+    .sticky-col-1 {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      background: var(--bg-canvas);
+    }
+    .sticky-col-2 {
+      position: sticky;
+      left: 66px;
+      z-index: 20;
+      background: var(--bg-canvas);
+    }
+    tr:hover .sticky-col-1, tr:hover .sticky-col-2 {
+      background-color: var(--bg-sidebar);
+    }
   }
 }

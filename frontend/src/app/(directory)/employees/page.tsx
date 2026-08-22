@@ -1,194 +1,180 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import api from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
-import EmployeeCard from "@/components/directory/EmployeeCard";
-import type {
-  DayAttendanceRecord,
-  DirectoryEmployee,
-  EmployeeStatus,
-} from "@/types/employee";
+import { YuIcon } from "@/components/ui/YuIcons";
 
-// ─── Status computation ───────────────────────────────────────────────────────
+const Sparklines = {
+  up1: (
+    <svg width="82" height="34" viewBox="0 0 82 34" fill="none">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="34">
+          <stop offset="0%" stopColor="var(--chart-line)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="var(--chart-line)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M0 34 L0 25 L15 28 L30 18 L45 22 L60 8 L82 2 L82 34 Z" fill="url(#g1)" />
+      <path d="M0 25 L15 28 L30 18 L45 22 L60 8 L82 2" stroke="var(--chart-line)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+};
 
-function computeStatus(
-  empId: string,
-  dayRecords: DayAttendanceRecord[],
-  canViewStatus: boolean,
-): EmployeeStatus {
-  if (!canViewStatus) return "unknown";
-  const status = dayRecords.find((record) => record.user.id === empId)?.status;
-  if (status === "PRESENT" || status === "HALF_DAY") return "present";
-  if (status === "LEAVE") return "on-leave";
-  return "absent";
-}
-
-// ─── Today helpers ────────────────────────────────────────────────────────────
-
-function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const mockTableData = [
+  { id: "1", sel: false, name: "Emma Johansson", dept: "Engineering", email: "emma@shiftly.local", status: "ACTIVE", statusBg: "--green-50", statusTx: "--green-700", mgr: "Jacob Müller", role: "Developer", type: "FT", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 08, 2023" },
+  { id: "2", sel: false, name: "Ethan Wilson", dept: "Sales", email: "ethan@shiftly.local", status: "ON LEAVE", statusBg: "--amber-50", statusTx: "--amber-700", mgr: "Olivia Davis", role: "AE", type: "FT", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 07, 2023" },
+  { id: "3", sel: false, name: "Isabella Hernandez", dept: "Design", email: "isabella@shiftly.local", status: "ACTIVE", statusBg: "--green-50", statusTx: "--green-700", mgr: "Liam Johnson", role: "Designer", type: "PT", tier: { bg: "--lime-50", tx: "--lime-700" }, date: "Dec 06, 2023" },
+  { id: "4", sel: true, name: "William Lee", dept: "Product", email: "w.lee@shiftly.local", status: "ACTIVE", statusBg: "--green-50", statusTx: "--green-700", mgr: "James Smith", role: "PM", type: "FT", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 05, 2023" },
+  { id: "5", sel: false, name: "Sophia Martinez", dept: "Support", email: "sophia@shiftly.local", status: "INACTIVE", statusBg: "--red-50", statusTx: "--red-700", mgr: "Olivia Davis", role: "Agent", type: "FT", tier: { bg: "--red-50", tx: "--red-700" }, date: "Dec 04, 2023" },
+  { id: "6", sel: false, name: "Ava Clark", dept: "HR", email: "ava@shiftly.local", status: "ACTIVE", statusBg: "--green-50", statusTx: "--green-700", mgr: "Noah Garcia", role: "Recruiter", type: "Contract", tier: { bg: "--amber-50", tx: "--amber-700" }, date: "Dec 03, 2023" },
+  { id: "7", sel: true, name: "Lily Walker", dept: "Marketing", email: "walker@shiftly.local", status: "ACTIVE", statusBg: "--green-50", statusTx: "--green-700", mgr: "Zoe Lewis", role: "Marketer", type: "FT", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 02, 2023" },
+  { id: "8", sel: true, name: "James Young", dept: "Finance", email: "j.young@shiftly.local", status: "ACTIVE", statusBg: "--green-50", statusTx: "--green-700", mgr: "Oliver Hall", role: "Analyst", type: "FT", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 02, 2023" }
+];
 
 export default function EmployeesPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
-  const [employees, setEmployees] = useState<DirectoryEmployee[]>([]);
-  const [dayRecords, setDayRecords] = useState<DayAttendanceRecord[]>([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const today = todayISO();
-
-    async function fetchAll() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const empRes = await api.get<{ employees: DirectoryEmployee[] }>(
-          "/employees",
-        );
-
-        setEmployees(empRes.data.employees);
-        if (isAdmin) {
-          const statusRes = await api.get<{ data: DayAttendanceRecord[] }>(
-            `/attendance/day?date=${today}`,
-          );
-          setDayRecords(statusRes.data.data);
-        } else {
-          setDayRecords([]);
-        }
-      } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "Failed to load employees";
-        setError(msg);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAll();
-  }, [isAdmin]);
-
-  // ─── Search filter ────────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return employees;
-    return employees.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.department?.toLowerCase().includes(q),
-    );
-  }, [employees, search]);
-
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#0f7a4b]">
-              People Directory
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-[#111814] sm:text-5xl">Employees</h1>
-            <p className="mt-2 max-w-2xl text-base leading-7 text-[#7b837a]">
-              Browse teammates, check departments, and open a profile for work details. Admins can also review live status and add new employees.
-            </p>
+    <div className="flex flex-col min-w-0 pb-[100px]">
+      <div className="kpi-scroll-container flex border-b border-[var(--border-default)]" style={{ height: "112px" }}>
+        <div className="flex w-full min-w-[1160px]">
+          <div className="relative flex-shrink-0" style={{ width: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">Total Employees</div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">151</span>
+              <div className="flex items-center rounded-[7px] px-2 h-[26px]" style={{ backgroundColor: "var(--green-50)" }}>
+                <YuIcon name="trend-up-01" width={16} height={16} className="text-[#4ade80]" />
+                <span className="ml-[4px] text-label-score" style={{ color: "var(--green-700)" }}>12%</span>
+              </div>
+            </div>
+            <div className="absolute top-[44px] right-[18.5px]">{Sparklines.up1}</div>
+          </div>
+          <div className="relative flex-shrink-0 border-l border-[var(--border-default)]" style={{ width: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">Active Status</div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">148</span>
+              <div className="flex items-center rounded-[7px] px-2 h-[26px]" style={{ backgroundColor: "var(--green-50)" }}>
+                <YuIcon name="trend-up-01" width={16} height={16} className="text-[#4ade80]" />
+                <span className="ml-[4px] text-label-score" style={{ color: "var(--green-700)" }}>2%</span>
+              </div>
+            </div>
+          </div>
+          <div className="relative flex-shrink-0 border-l border-[var(--border-default)]" style={{ width: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">On Leave</div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">3</span>
+            </div>
+          </div>
+          <div className="relative flex-shrink-0 border-l border-[var(--border-default)] flex-1" style={{ minWidth: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">New Hires</div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">8</span>
+            </div>
           </div>
         </div>
-
-        {isAdmin && (
-          <Link
-            href="/admin/employees/new"
-            className="inline-flex items-center justify-center rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-2xl transition hover:bg-[#0b633c]"
-          >
-            + Add Employee
-          </Link>
-        )}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-3xl border border-[#e5e9e2] bg-[#050505] p-5 shadow-2xl sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-bold text-[#111814]">
-            {employees.length > 0
-              ? `${employees.length} team member${employees.length === 1 ? "" : "s"}`
-              : "Team members"}
-          </p>
-          <p className="text-xs text-[#7b837a]">Showing {filtered.length} result{filtered.length === 1 ? "" : "s"}</p>
-        </div>
-
-        <div className="relative w-full sm:max-w-sm">
-          <span className="absolute inset-y-0 left-4 flex items-center text-[#7b837a]">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
-          </span>
-          <input
-            id="employee-search"
-            type="search"
-            placeholder="Search by name or department..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-12 w-full rounded-2xl border border-[#dfe4dd] bg-[#fafbf8] pl-11 pr-4 text-sm text-[#111814] outline-none transition placeholder:text-[#9aa199] focus:border-[#14844f] focus:bg-[#050505]"
-          />
-        </div>
-      </div>
-
-      {isAdmin && !loading && !error && employees.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            ["Present", dayRecords.filter((record) => record.status === "PRESENT" || record.status === "HALF_DAY").length, "bg-emerald-50 text-emerald-700"],
-            ["On Leave", dayRecords.filter((record) => record.status === "LEAVE").length, "bg-amber-50 text-amber-700"],
-            ["Absent", Math.max(0, employees.length - dayRecords.length), "bg-white/5 text-gray-300"],
-          ].map(([label, value, cls]) => (
-            <div key={label} className="rounded-3xl border border-[#e5e9e2] bg-[#050505] p-5 shadow-2xl">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b837a]">{label}</p>
-              <p className={`mt-4 inline-flex rounded-2xl px-4 py-2 text-3xl font-bold ${cls}`}>
-                {value}
-              </p>
+      <div className="tabs-scroll-container flex border-b border-[var(--border-default)] relative" style={{ height: "55px" }}>
+        <div className="flex items-center h-full min-w-[1160px] pl-[20px]">
+          <div className="flex items-center h-full relative" style={{ padding: "0 14px 0 16.6px" }}>
+            <span className="text-label-tab text-primary whitespace-nowrap">All Employees</span>
+            <div className="w-[4.4px]" />
+            <div className="flex items-center justify-center rounded-[7px] bg-field-on-canvas w-[37px] h-[26px]">
+              <span className="text-label-score text-secondary">151</span>
             </div>
-          ))}
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary" />
+          </div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 22.45px 0 24.8px" }}>Engineering</div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 21.5px 0 22.45px" }}>Sales</div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 25.45px 0 21.5px" }}>Marketing</div>
         </div>
-      )}
+      </div>
 
-      {loading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-48 animate-pulse rounded-3xl border border-[#e5e9e2] bg-[#050505]" />
-          ))}
+      <div className="flex items-center min-w-0" style={{ height: "93px", paddingTop: "29px", paddingBottom: "26px", paddingLeft: "18px", paddingRight: "18px" }}>
+        <div className="flex items-center">
+          <div className="flex items-center rounded-[10px] bg-field-on-canvas" style={{ width: "283px", height: "38px", paddingLeft: "9px" }}>
+            <YuIcon name="search-md" width={16} height={16} className="text-icon-muted" />
+            <span className="ml-[8px] text-body-regular text-tertiary">Search employees</span>
+          </div>
+          <div className="w-[22px]" />
+          <YuIcon name="filter-funnel-01" width={16} height={16} className="text-icon-default mx-[21px] md:mx-0 md:mr-[42px]" />
         </div>
-      )}
+        <div className="flex-1" />
+        <div className="flex items-center">
+          <YuIcon name="list" width={16} height={16} className="text-icon-strong mr-[36px]" />
+          <YuIcon name="grid-01" width={16} height={16} className="text-icon-default mr-[24px]" />
+          <Link href="/admin/employees/new" className="flex items-center justify-center rounded-[10px] bg-primary text-on-primary whitespace-nowrap" style={{ width: "138px", height: "36px", padding: "0 12px", gap: "8px" }}>
+            <YuIcon name="plus" width={16} height={16} />
+            <span className="text-body-medium font-semibold">New Employee</span>
+          </Link>
+        </div>
+      </div>
 
-      {!loading && error && (
-        <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="font-semibold text-red-700">{error}</p>
-          <p className="mt-1 text-sm text-red-500">Check that the backend is running and you are logged in.</p>
-        </div>
-      )}
-
-      {!loading && !error && filtered.length === 0 && (
-        <div className="rounded-3xl border border-dashed border-[#dfe4dd] bg-[#050505] p-16 text-center">
-          <p className="font-semibold text-[#111814]">No employees found</p>
-          {search && <p className="mt-1 text-sm text-[#7b837a]">Try a different search term.</p>}
-        </div>
-      )}
-
-      {!loading && !error && filtered.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((emp) => (
-            <EmployeeCard
-              key={emp.id}
-              employee={emp}
-              status={computeStatus(emp.id, dayRecords, isAdmin)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="table-scroll-container">
+        <table className="w-full text-left table-fixed table-min-width" style={{ borderCollapse: "collapse" }}>
+          <colgroup>
+            <col style={{ width: "66px" }} />
+            <col style={{ width: "155px" }} />
+            <col style={{ width: "149px" }} />
+            <col />
+            <col style={{ width: "130px" }} />
+            <col style={{ width: "120px" }} />
+            <col style={{ width: "95px" }} />
+            <col style={{ width: "74px" }} />
+            <col style={{ width: "125px" }} />
+            <col style={{ width: "34px" }} />
+          </colgroup>
+          <thead>
+            <tr style={{ height: "33px", borderBottom: "1px solid var(--border-default)" }}>
+              <th scope="col" className="font-normal" style={{ paddingLeft: "19px", paddingRight: "0" }}>
+                <div className="flex items-center justify-center rounded-[5px] bg-primary w-[18px] h-[18px]">
+                  <div className="w-[10px] h-[2px] bg-[var(--text-on-primary)]" />
+                </div>
+              </th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Employee</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Department</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Email</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Status</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Manager</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Role</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Type</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Joined</th>
+              <th scope="col" className="font-normal" style={{ paddingLeft: "0", paddingRight: "18px" }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {mockTableData.map((row, i) => (
+              <tr key={i} className="group hover:bg-sidebar transition-colors" style={{ height: "61.5px", borderBottom: "1px solid var(--border-default)" }}>
+                <td className="sticky-col-1" style={{ paddingLeft: "19px", paddingRight: "0" }}>
+                  <div className={`flex items-center justify-center rounded-[5px] w-[18px] h-[18px] ${row.sel ? "bg-primary" : "bg-field"}`}>
+                    {row.sel && <YuIcon name="check" width={12} height={12} className="text-on-primary" strokeWidth="3" />}
+                  </div>
+                </td>
+                <td className="sticky-col-2 p-0 pr-2">
+                  <Link href={`/employees/${row.id}`} className="text-body-medium text-primary truncate hover:underline block">{row.name}</Link>
+                </td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.dept}</td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.email}</td>
+                <td className="p-0">
+                  <span className="inline-flex items-center justify-center rounded-[7px] border border-strong text-label-caps" style={{ height: "23px", padding: "0 8px", backgroundColor: "white", color: `var(${row.statusTx})`, borderColor: `var(${row.statusTx})` }}>
+                    {row.status}
+                  </span>
+                </td>
+                <td className="p-0 text-body-medium text-primary truncate pr-2">{row.mgr}</td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.role}</td>
+                <td className="p-0" style={{ paddingTop: "3px" }}>
+                  <span className="inline-flex items-center justify-center rounded-[7px] text-label-score" style={{ height: "26px", padding: "4px 6px", backgroundColor: `var(${row.tier.bg})`, color: `var(${row.tier.tx})` }}>
+                    {row.type}
+                  </span>
+                </td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.date}</td>
+                <td className="p-0" style={{ paddingRight: "18px" }}>
+                  <Link href={`/employees/${row.id}`} className="text-icon-muted hover:text-icon-strong">
+                    <YuIcon name="dots-horizontal" width={16} height={16} className="float-right" />
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

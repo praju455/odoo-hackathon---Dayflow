@@ -1,11 +1,3 @@
-// ProfileView — tabbed profile display.
-// Accepts `readOnly` to hide edit controls (used on /employees/[id]).
-// Accepts `isAdmin` to show the Salary Info tab (Step 7 placeholder).
-//
-// Member 3 can reuse this component for /profile with readOnly=false,
-// or import their own edit form and swap — the interface is intentionally
-// kept simple: { employee, readOnly, isAdmin }.
-
 "use client";
 
 import { useState } from "react";
@@ -13,24 +5,16 @@ import Avatar from "@/components/ui/Avatar";
 import StatusBadge from "@/components/directory/StatusBadge";
 import SalaryEditor from "@/components/admin/SalaryEditor";
 import type { EmployeeStatus, UserProfile } from "@/types/employee";
-
-// ─── Props ────────────────────────────────────────────────────────────────────
+import { YuIcon } from "@/components/ui/YuIcons";
 
 interface ProfileViewProps {
   employee: UserProfile;
-  /** true when viewing someone else's profile */
   readOnly: boolean;
-  /** true when the logged-in user is an Admin */
   isAdmin: boolean;
-  /** Live status from the directory (optional — shown in header) */
   status?: EmployeeStatus;
 }
 
-// ─── Tab definitions ──────────────────────────────────────────────────────────
-
 type TabId = "profile" | "salary";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -43,23 +27,24 @@ function formatDate(iso: string | null | undefined): string {
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex flex-col gap-1 border-b border-white/5 py-3 last:border-0 sm:flex-row sm:items-start">
-      <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-slate-400 sm:w-40">
+    <div className="flex flex-col gap-1 border-b border-[var(--border-default)] py-4 last:border-0 sm:flex-row sm:items-start">
+      <span className="shrink-0 text-label-caps text-secondary sm:w-48 mt-1">
         {label}
       </span>
-      <span className="text-sm font-medium text-gray-200">{value || "—"}</span>
+      <span className="text-body-medium text-primary">{value || "—"}</span>
     </div>
   );
 }
 
 function TagList({ items, label }: { items: string[]; label: string }) {
-  if (!items || items.length === 0) return <span className="text-sm text-gray-400">—</span>;
+  if (!items || items.length === 0) return <span className="text-body-regular text-tertiary">—</span>;
   return (
     <div className="flex flex-wrap gap-2" aria-label={label}>
       {items.map((item) => (
         <span
           key={item}
-          className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700"
+          className="inline-flex items-center justify-center rounded-[7px] text-label-score"
+          style={{ height: "26px", padding: "4px 6px", backgroundColor: "var(--bg-canvas)", color: "var(--text-secondary)" }}
         >
           {item}
         </span>
@@ -67,8 +52,6 @@ function TagList({ items, label }: { items: string[]; label: string }) {
     </div>
   );
 }
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ProfileView({
   employee,
@@ -78,123 +61,125 @@ export default function ProfileView({
 }: ProfileViewProps) {
   const tabs: { id: TabId; label: string }[] = [
     { id: "profile", label: "Profile" },
-    // Salary tab visible only to admins (Step 7 will flesh this out)
     ...(isAdmin ? [{ id: "salary" as TabId, label: "Salary Info" }] : []),
   ];
 
   const [activeTab, setActiveTab] = useState<TabId>("profile");
+  const initials = employee.name.charAt(0).toUpperCase();
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[28px] border border-white/10 bg-[#050505] p-6 shadow-2xl sm:p-8">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <Avatar name={employee.name} src={employee.profilePictureUrl} size="xl" />
+    <div className="max-w-4xl mx-auto space-y-6 pb-[100px]">
+      <div className="bg-field border border-[var(--border-default)] rounded-[16px] p-8 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 shadow-sm mt-8">
+        <div className="w-[88px] h-[88px] rounded-[16px] bg-primary flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+          {employee.profilePictureUrl ? (
+            <img src={employee.profilePictureUrl} alt={employee.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[32px] font-bold text-on-primary select-none">{initials}</span>
+          )}
+        </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-white">{employee.name}</h1>
+          <div className="flex flex-wrap items-center gap-4 mb-2">
+            <h1 className="text-[24px] leading-tight font-semibold text-primary truncate">{employee.name}</h1>
             {employee.role === "ADMIN" && (
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
-                Admin
+              <span className="inline-flex items-center justify-center rounded-[7px] text-label-caps" style={{ height: "23px", padding: "0 8px", backgroundColor: "white", color: "var(--primary)", border: "1px solid var(--border-strong)" }}>
+                ADMIN
               </span>
             )}
-            {status && <StatusBadge status={status} showLabel />}
+            {status && (
+              <span className="inline-flex items-center justify-center rounded-[7px] border border-strong text-label-caps" style={{ height: "23px", padding: "0 8px", backgroundColor: "white", color: "var(--primary)", borderColor: "var(--primary)" }}>
+                {status}
+              </span>
+            )}
           </div>
-          <p className="mt-2 text-sm font-medium text-slate-500">
+          <p className="text-body-regular text-secondary">
             {[employee.jobTitle, employee.department].filter(Boolean).join(" · ")}
           </p>
-          <p className="mt-2 text-xs text-slate-400">
-            Login ID: <span className="font-mono">{employee.loginId}</span>
+          <p className="text-body-regular text-tertiary mt-1 font-mono">
+            Login ID: {employee.loginId}
           </p>
         </div>
 
-        {/* Edit button — shown only when not readOnly and on profile owner's view */}
         {!readOnly && (
-          <button
-            className="shrink-0 rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-800"
-            onClick={() => {
-              // Member 3 wires this to their edit form
-              // For now it's a no-op placeholder
-            }}
-          >
+          <button className="px-5 py-2.5 rounded-[10px] text-body-medium font-semibold text-on-primary bg-primary hover:opacity-90 active:opacity-100 transition-all shadow-sm">
             Edit Profile
           </button>
         )}
-        </div>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-[#050505] p-2 shadow-2xl">
-        <nav className="flex gap-2" aria-label="Profile tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              id={`tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                activeTab === tab.id
-                  ? "bg-emerald-700 text-white"
-                  : "text-slate-500 hover:bg-white/5 hover:text-white"
-              }`}
-              aria-selected={activeTab === tab.id}
-              role="tab"
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="flex gap-2 mb-8 border-b border-[var(--border-default)] pb-4">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            id={`tab-${tab.id}`}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-[8px] text-body-medium font-medium transition-colors ${
+              activeTab === tab.id
+                ? "bg-primary text-on-primary shadow-sm"
+                : "text-secondary hover:bg-field"
+            }`}
+            aria-selected={activeTab === tab.id}
+            role="tab"
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* ── Tab panels ───────────────────────────────────────────────── */}
       {activeTab === "profile" && (
-        <div className="space-y-6 rounded-[28px] border border-white/10 bg-[#050505] p-6 shadow-2xl sm:p-8" role="tabpanel" aria-labelledby="tab-profile">
-          {/* Personal & contact */}
+        <div className="bg-field-on-canvas border border-[var(--border-default)] rounded-[16px] p-6 sm:p-8 shadow-sm space-y-8" role="tabpanel" aria-labelledby="tab-profile">
           <section>
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <h2 className="mb-4 text-label-caps text-secondary">
               Personal Information
             </h2>
-            <InfoRow label="Full Name" value={employee.name} />
-            <InfoRow label="Email" value={employee.email} />
-            <InfoRow label="Phone" value={employee.phone} />
-            <InfoRow label="Joining Date" value={formatDate(employee.joiningDate)} />
+            <div className="bg-field border border-[var(--border-default)] rounded-[12px] p-6">
+              <InfoRow label="Full Name" value={employee.name} />
+              <InfoRow label="Email" value={employee.email} />
+              <InfoRow label="Phone" value={employee.phone} />
+              <InfoRow label="Joining Date" value={formatDate(employee.joiningDate)} />
+            </div>
           </section>
 
-          {/* Job info */}
           <section>
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <h2 className="mb-4 text-label-caps text-secondary">
               Job Details
             </h2>
-            <InfoRow label="Department" value={employee.department} />
-            <InfoRow label="Job Title" value={employee.jobTitle} />
+            <div className="bg-field border border-[var(--border-default)] rounded-[12px] p-6">
+              <InfoRow label="Department" value={employee.department} />
+              <InfoRow label="Job Title" value={employee.jobTitle} />
+            </div>
           </section>
 
-          {/* About */}
           {employee.about && (
             <section>
-              <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+              <h2 className="mb-4 text-label-caps text-secondary">
                 About
               </h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
-                {employee.about}
-              </p>
+              <div className="bg-field border border-[var(--border-default)] rounded-[12px] p-6">
+                <p className="whitespace-pre-wrap text-body-regular text-primary">
+                  {employee.about}
+                </p>
+              </div>
             </section>
           )}
 
-          {/* Skills, certifications, interests */}
           <section>
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <h2 className="mb-4 text-label-caps text-secondary">
               Skills & Interests
             </h2>
-            <div className="space-y-4">
+            <div className="bg-field border border-[var(--border-default)] rounded-[12px] p-6 space-y-6">
               <div>
-                <p className="mb-2 text-xs font-semibold text-slate-500">Skills</p>
+                <p className="mb-2 text-body-medium text-secondary">Skills</p>
                 <TagList items={employee.skills} label="Skills" />
               </div>
+              <div className="h-px w-full bg-[var(--border-default)]" />
               <div>
-                <p className="mb-2 text-xs font-semibold text-slate-500">Certifications</p>
+                <p className="mb-2 text-body-medium text-secondary">Certifications</p>
                 <TagList items={employee.certifications} label="Certifications" />
               </div>
+              <div className="h-px w-full bg-[var(--border-default)]" />
               <div>
-                <p className="mb-2 text-xs font-semibold text-slate-500">Interests</p>
+                <p className="mb-2 text-body-medium text-secondary">Interests</p>
                 <TagList items={employee.interests} label="Interests" />
               </div>
             </div>
@@ -203,8 +188,8 @@ export default function ProfileView({
       )}
 
       {activeTab === "salary" && isAdmin && (
-        <div className="rounded-[28px] border border-white/10 bg-[#050505] p-6 shadow-2xl sm:p-8" role="tabpanel" aria-labelledby="tab-salary">
-          <h2 className="mb-6 text-base font-bold text-white">Update Salary Information</h2>
+        <div className="bg-field-on-canvas border border-[var(--border-default)] rounded-[16px] p-6 sm:p-8 shadow-sm" role="tabpanel" aria-labelledby="tab-salary">
+          <h2 className="mb-6 text-[18px] font-semibold text-primary">Update Salary Information</h2>
           <SalaryEditor employeeId={employee.id} />
         </div>
       )}

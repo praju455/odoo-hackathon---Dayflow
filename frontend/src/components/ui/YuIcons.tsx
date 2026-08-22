@@ -1,0 +1,194 @@
+import React from "react";
+
+interface IconProps extends React.SVGProps<SVGSVGElement> {}
+
+const baseProps = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "1.5",
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+const iconMap = {
+  "announcement-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+      <path d="M11 8h2v5h-2zM11 15h2v2h-2z" />
+    </svg>
+  ),
+  "bell-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
+    </svg>
+  ),
+  check: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  "chevron-selector-vertical": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M7 15l5 5 5-5M7 9l5-5 5 5" />
+    </svg>
+  ),
+  clipboard: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    </svg>
+  ),
+  "dots-horizontal": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
+    </svg>
+  ),
+  "download-cloud-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polyline points="8 17 12 21 16 17" />
+      <line x1="12" y1="12" x2="12" y2="21" />
+      <path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29" />
+    </svg>
+  ),
+  "filter-funnel-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  ),
+  "grid-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  ),
+  "help-circle": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  "info-circle": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  ),
+  list: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  ),
+  "message-text-square-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+      <line x1="9" y1="9" x2="15" y2="9" />
+      <line x1="9" y1="13" x2="15" y2="13" />
+    </svg>
+  ),
+  plus: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  ),
+  "search-lg": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  "search-md": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  "settings-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
+  ),
+  "settings-04": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <line x1="4" y1="21" x2="4" y2="14" />
+      <line x1="4" y1="10" x2="4" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="20" y1="21" x2="20" y2="16" />
+      <line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="1" y1="14" x2="7" y2="14" />
+      <line x1="9" y1="8" x2="15" y2="8" />
+      <line x1="17" y1="16" x2="23" y2="16" />
+    </svg>
+  ),
+  "switch-vertical-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polyline points="7 10 3 14 7 18" />
+      <line x1="3" y1="14" x2="15" y2="14" />
+      <polyline points="17 14 21 10 17 6" />
+      <line x1="21" y1="10" x2="9" y2="10" />
+    </svg>
+  ),
+  "target-04": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  "trend-down-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+      <polyline points="16 17 22 17 22 11" />
+    </svg>
+  ),
+  "trend-up-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  ),
+  "upload-cloud-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <polyline points="16 16 12 12 8 16" />
+      <line x1="12" y1="12" x2="12" y2="21" />
+      <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
+    </svg>
+  ),
+  "user-plus-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+      <circle cx="8.5" cy="7" r="4" />
+      <line x1="20" y1="8" x2="20" y2="14" />
+      <line x1="23" y1="11" x2="17" y2="11" />
+    </svg>
+  ),
+  "users-01": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 00-3-3.87" />
+      <path d="M16 3.13a4 4 0 010 7.75" />
+    </svg>
+  ),
+};
+
+export const YuIcon = ({ name, ...props }: IconProps & { name: keyof typeof iconMap }) => {
+  const Icon = iconMap[name];
+  if (!Icon) return null;
+  return <Icon {...props} />;
+};

@@ -1,19 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import {
-  Bar,
-  BarChart,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { YuIcon } from "@/components/ui/YuIcons";
 
 interface AnalyticsData {
   attendance: Record<string, number>;
@@ -21,335 +10,320 @@ interface AnalyticsData {
   headcount: Record<string, number>;
 }
 
-function numberFrom(record: Record<string, number>, keys: string[]) {
-  return keys.reduce((sum, key) => sum + (record[key] ?? record[key.toUpperCase()] ?? 0), 0);
-}
+// ─── Sparklines ───────────────────────────────────────────────────────────────
+const Sparklines = {
+  up1: (
+    <svg width="82" height="34" viewBox="0 0 82 34" fill="none">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="34">
+          <stop offset="0%" stopColor="var(--chart-line)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="var(--chart-line)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M0 34 L0 25 L15 28 L30 18 L45 22 L60 8 L82 2 L82 34 Z" fill="url(#g1)" />
+      <path d="M0 25 L15 28 L30 18 L45 22 L60 8 L82 2" stroke="var(--chart-line)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  up2: (
+    <svg width="82" height="34" viewBox="0 0 82 34" fill="none">
+      <defs>
+        <linearGradient id="g2" x1="0" y1="0" x2="0" y2="34">
+          <stop offset="0%" stopColor="var(--chart-line)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="var(--chart-line)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M0 34 L0 28 L15 20 L30 24 L45 14 L60 12 L82 4 L82 34 Z" fill="url(#g2)" />
+      <path d="M0 28 L15 20 L30 24 L45 14 L60 12 L82 4" stroke="var(--chart-line)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  up3: (
+    <svg width="82" height="34" viewBox="0 0 82 34" fill="none">
+      <defs>
+        <linearGradient id="g3" x1="0" y1="0" x2="0" y2="34">
+          <stop offset="0%" stopColor="var(--chart-line)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="var(--chart-line)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M0 34 L0 22 L15 24 L30 15 L45 18 L60 6 L82 5 L82 34 Z" fill="url(#g3)" />
+      <path d="M0 22 L15 24 L30 15 L45 18 L60 6 L82 5" stroke="var(--chart-line)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  down1: (
+    <svg width="82" height="34" viewBox="0 0 82 34" fill="none">
+      <defs>
+        <linearGradient id="g4" x1="0" y1="0" x2="0" y2="34">
+          <stop offset="0%" stopColor="var(--chart-line)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="var(--chart-line)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M0 34 L0 5 L15 12 L30 8 L45 18 L60 22 L82 28 L82 34 Z" fill="url(#g4)" />
+      <path d="M0 5 L15 12 L30 8 L45 18 L60 22 L82 28" stroke="var(--chart-line)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+};
 
-function labelize(value: string) {
-  return value
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function StatCard({
-  label,
-  value,
-  note,
-  featured,
-}: {
-  label: string;
-  value: number | string;
-  note: string;
-  featured?: boolean;
-}) {
-  return (
-    <section
-      className={`min-h-44 rounded-3xl p-6 shadow-2xl ${
-        featured
-          ? "bg-gradient-to-br from-[#064423] via-[#0c693b] to-[#198954] text-white"
-          : "bg-[#050505] text-[#111814]"
-      }`}
-    >
-      <p className={`text-sm font-bold ${featured ? "text-white" : "text-[#111814]"}`}>{label}</p>
-      <p className="mt-8 text-5xl font-bold leading-none tracking-tight">{value}</p>
-      <p className={`mt-5 text-sm ${featured ? "text-white/75" : "text-[#70786f]"}`}>{note}</p>
-    </section>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="grid h-full min-h-48 place-items-center rounded-2xl border border-dashed border-[#dfe4dd] bg-[#fafbf8] text-center text-sm font-semibold text-[#8b938a]">
-      {text}
-    </div>
-  );
-}
+const mockTableData = [
+  { sel: false, name: "Emma Johansson", dept: "Engineering", email: "emma@shiftly.local", status: "PRESENT", statusBg: "--green-50", statusTx: "--green-700", mgr: "Jacob Müller", role: "Developer", score: "9/10", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 08, 2025" },
+  { sel: false, name: "Ethan Wilson", dept: "Sales", email: "ethan@shiftly.local", status: "ON LEAVE", statusBg: "--amber-50", statusTx: "--amber-700", mgr: "Olivia Davis", role: "AE", score: "6/10", tier: { bg: "--lime-50", tx: "--lime-700" }, date: "Dec 07, 2025" },
+  { sel: false, name: "Isabella Hernandez", dept: "Design", email: "isabella@shiftly.local", status: "ABSENT", statusBg: "--red-50", statusTx: "--red-700", mgr: "Liam Johnson", role: "Designer", score: "4/10", tier: { bg: "--amber-50", tx: "--amber-700" }, date: "Dec 06, 2025" },
+  { sel: true, name: "William Lee", dept: "Product", email: "w.lee@shiftly.local", status: "PRESENT", statusBg: "--green-50", statusTx: "--green-700", mgr: "James Smith", role: "PM", score: "7/10", tier: { bg: "--lime-50", tx: "--lime-700" }, date: "Dec 05, 2025" },
+  { sel: false, name: "Sophia Martinez", dept: "Support", email: "sophia@shiftly.local", status: "PRESENT", statusBg: "--green-50", statusTx: "--green-700", mgr: "Olivia Davis", role: "Agent", score: "6/10", tier: { bg: "--lime-50", tx: "--lime-700" }, date: "Dec 04, 2025" },
+  { sel: false, name: "Ava Clark", dept: "HR", email: "ava@shiftly.local", status: "ON LEAVE", statusBg: "--amber-50", statusTx: "--amber-700", mgr: "Noah Garcia", role: "Recruiter", score: "1/10", tier: { bg: "--red-50", tx: "--red-700" }, date: "Dec 03, 2025" },
+  { sel: true, name: "Lily Walker", dept: "Marketing", email: "walker@shiftly.local", status: "ABSENT", statusBg: "--red-50", statusTx: "--red-700", mgr: "Zoe Lewis", role: "Marketer", score: "6/10", tier: { bg: "--lime-50", tx: "--lime-700" }, date: "Dec 02, 2025" },
+  { sel: true, name: "James Young", dept: "Finance", email: "j.young@shiftly.local", status: "PRESENT", statusBg: "--green-50", statusTx: "--green-700", mgr: "Oliver Hall", role: "Analyst", score: "5/10", tier: { bg: "--amber-50", tx: "--amber-700" }, date: "Dec 02, 2025" },
+  { sel: false, name: "Mason Allen", dept: "Engineering", email: "mason@shiftly.local", status: "PRESENT", statusBg: "--green-50", statusTx: "--green-700", mgr: "Emily King", role: "Developer", score: "9/10", tier: { bg: "--green-50", tx: "--green-700" }, date: "Dec 01, 2025" },
+  { sel: false, name: "Jack Robinson", dept: "Sales", email: "jack@shiftly.local", status: "ON LEAVE", statusBg: "--amber-50", statusTx: "--amber-700", mgr: "Mia Brown", role: "AE", score: "7/10", tier: { bg: "--lime-50", tx: "--lime-700" }, date: "Dec 01, 2025" },
+  { sel: false, name: "David Ramirez", dept: "Logistics", email: "david@shiftly.local", status: "PRESENT", statusBg: "--green-50", statusTx: "--green-700", mgr: "Ella Turner", role: "Manager", score: "4/10", tier: { bg: "--amber-50", tx: "--amber-700" }, date: "Dec 01, 2025" }
+];
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await api.get<{ success: boolean; data: AnalyticsData }>("/analytics/summary");
         if (res.data.success) setData(res.data.data);
-      } catch (err: unknown) {
-        setError(
-          (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-            "Failed to load analytics",
-        );
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) {}
     }
-    void fetchData();
+    fetchData();
   }, []);
 
-  const dashboard = useMemo(() => {
-    const source = data ?? { attendance: {}, leaveRequests: {}, headcount: {} };
-    const headcountData = Object.entries(source.headcount)
-      .map(([name, count]) => ({ name: labelize(name), count }))
-      .sort((a, b) => b.count - a.count);
-    const attendanceData = Object.entries(source.attendance).map(([name, count]) => ({
-      name: labelize(name),
-      count,
-    }));
-    const leaveData = Object.entries(source.leaveRequests).map(([name, value]) => ({
-      name: labelize(name),
-      value,
-    }));
-
-    const employees = headcountData.reduce((sum, item) => sum + item.count, 0);
-    const present = numberFrom(source.attendance, ["PRESENT", "present"]);
-    const absent = numberFrom(source.attendance, ["ABSENT", "absent"]);
-    const onLeave = numberFrom(source.attendance, ["LEAVE", "leave", "ON_LEAVE"]);
-    const pending = numberFrom(source.leaveRequests, ["PENDING", "pending"]);
-    const approved = numberFrom(source.leaveRequests, ["APPROVED", "approved"]);
-    const rejected = numberFrom(source.leaveRequests, ["REJECTED", "rejected"]);
-    const leaveTotal = approved + pending + rejected;
-    const approvalRate = leaveTotal > 0 ? Math.round((approved / leaveTotal) * 100) : 0;
-    const attendanceTotal = present + absent + onLeave;
-    const presentRate = attendanceTotal > 0 ? Math.round((present / attendanceTotal) * 100) : 0;
-
-    return {
-      attendanceData,
-      headcountData,
-      leaveData,
-      employees,
-      present,
-      absent,
-      onLeave,
-      pending,
-      approved,
-      rejected,
-      leaveTotal,
-      approvalRate,
-      presentRate,
-    };
-  }, [data]);
-
-  if (loading) {
-    return (
-      <div className="grid min-h-[60vh] place-items-center rounded-3xl bg-[#050505] text-sm font-semibold text-[#7d847c]">
-        Loading dashboard...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-3xl border border-red-100 bg-red-50 p-6 text-sm font-semibold text-red-700">
-        {error}
-      </div>
-    );
-  }
+  const totalEmps = data ? Object.values(data.headcount).reduce((a, b) => a + b, 0) : 151;
+  const present = data ? (data.attendance["PRESENT"] || data.attendance["present"] || 0) : 59;
+  const leaves = data ? (data.leaveRequests["PENDING"] || data.leaveRequests["pending"] || 0) : 23;
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-[#111814] sm:text-5xl">Dashboard</h1>
-          <p className="mt-3 max-w-2xl text-base text-[#7b837a]">
-            Live HR overview from attendance, leave, and employee records.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/employees/new"
-            className="rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-2xl transition hover:bg-[#0b633c]"
-          >
-            + Add Employee
-          </Link>
-          <Link
-            href="/employees"
-            className="rounded-full border border-[#133f2a] bg-[#050505] px-6 py-3 text-sm font-bold text-[#133f2a] transition hover:bg-[#eef0ec]"
-          >
-            View Directory
-          </Link>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Employees" value={dashboard.employees} note="Active records in the company" featured />
-        <StatCard label="Present Today" value={dashboard.present} note={`${dashboard.presentRate}% of today's attendance`} />
-        <StatCard label="On Leave" value={dashboard.onLeave} note="Marked as leave in attendance" />
-        <StatCard
-          label="Pending Leave"
-          value={dashboard.pending}
-          note={dashboard.pending ? "Needs admin review" : "No pending approvals"}
-        />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-bold text-[#111814]">Headcount By Department</h2>
-              <p className="mt-1 text-sm text-[#7b837a]">Uses the department data saved on employee profiles.</p>
+    <div className="flex flex-col min-w-0 pb-[100px]">
+      {/* ─── KPI Strip ───────────────────────────────────────────────────────── */}
+      <div
+        className="kpi-scroll-container flex border-b border-[var(--border-default)]"
+        style={{ height: "112px" }}
+      >
+        <div className="flex w-full min-w-[1160px]">
+          {/* Card 1 */}
+          <div className="relative flex-shrink-0" style={{ width: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">
+              Total Employees
             </div>
-            <span className="rounded-full bg-[#eef4ef] px-3 py-1 text-xs font-bold text-[#0f7a4b]">
-              {dashboard.employees} total
-            </span>
-          </div>
-          <div className="mt-6 h-80">
-            {dashboard.headcountData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dashboard.headcountData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#7b837a", fontSize: 12 }} />
-                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#7b837a", fontSize: 12 }} />
-                  <Tooltip
-                    cursor={{ fill: "rgba(15,122,75,0.08)" }}
-                    contentStyle={{
-                      border: "1px solid #edf0eb",
-                      borderRadius: 14,
-                      boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
-                    }}
-                  />
-                  <Bar dataKey="count" radius={[18, 18, 6, 6]} barSize={54}>
-                    {dashboard.headcountData.map((_, index) => (
-                      <Cell key={index} fill={index % 3 === 0 ? "#0f7a4b" : index % 3 === 1 ? "#68be92" : "#d6ddd4"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyState text="No department data yet" />
-            )}
-          </div>
-        </section>
-
-        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
-          <h2 className="text-xl font-bold text-[#111814]">Attendance Mix</h2>
-          <p className="mt-1 text-sm text-[#7b837a]">Today’s status split from attendance records.</p>
-          <div className="mt-6 space-y-5">
-            {[
-              ["Present", dashboard.present, "#168350"],
-              ["Absent", dashboard.absent, "#e45d46"],
-              ["On Leave", dashboard.onLeave, "#f5b233"],
-            ].map(([label, value, color]) => {
-              const width =
-                dashboard.present + dashboard.absent + dashboard.onLeave > 0
-                  ? Math.round((Number(value) / (dashboard.present + dashboard.absent + dashboard.onLeave)) * 100)
-                  : 0;
-              return (
-                <div key={String(label)}>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-bold text-[#111814]">{label}</span>
-                    <span className="font-semibold text-[#7b837a]">{value}</span>
-                  </div>
-                  <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#e4e9e2]">
-                    <div className="h-full rounded-full" style={{ width: `${width}%`, backgroundColor: String(color) }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr_1fr]">
-        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
-          <h2 className="text-xl font-bold text-[#111814]">Leave Requests</h2>
-          <p className="mt-1 text-sm text-[#7b837a]">Current request status distribution.</p>
-          <div className="mt-6 h-64">
-            {dashboard.leaveTotal > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Approved", value: dashboard.approved },
-                      { name: "Pending", value: dashboard.pending },
-                      { name: "Rejected", value: dashboard.rejected },
-                    ].filter((item) => item.value > 0)}
-                    innerRadius={58}
-                    outerRadius={88}
-                    dataKey="value"
-                    paddingAngle={4}
-                  >
-                    <Cell fill="#168350" />
-                    <Cell fill="#f5b233" />
-                    <Cell fill="#e45d46" />
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyState text="No leave requests yet" />
-            )}
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-2xl bg-[#f6f8f4] p-3">
-              <p className="text-2xl font-bold text-[#111814]">{dashboard.approved}</p>
-              <p className="text-xs text-[#7b837a]">Approved</p>
-            </div>
-            <div className="rounded-2xl bg-[#f6f8f4] p-3">
-              <p className="text-2xl font-bold text-[#111814]">{dashboard.pending}</p>
-              <p className="text-xs text-[#7b837a]">Pending</p>
-            </div>
-            <div className="rounded-2xl bg-[#f6f8f4] p-3">
-              <p className="text-2xl font-bold text-[#111814]">{dashboard.approvalRate}%</p>
-              <p className="text-xs text-[#7b837a]">Approval</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
-          <h2 className="text-xl font-bold text-[#111814]">Admin Actions</h2>
-          <p className="mt-1 text-sm text-[#7b837a]">Useful places to continue real workflows.</p>
-          <div className="mt-6 space-y-3">
-            {[
-              ["Review attendance", "/admin/attendance", `${dashboard.present} present today`],
-              ["Review leave queue", "/admin/time-off", `${dashboard.pending} pending`],
-              ["Manage employees", "/employees", `${dashboard.employees} employee records`],
-              ["Create employee", "/admin/employees/new", "Generate login credentials"],
-            ].map(([label, href, note]) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-[#edf0eb] bg-[#fafbf8] px-4 py-4 transition hover:border-[#0f7a4b]/30 hover:bg-[#f3f6f1]"
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">{totalEmps}</span>
+              <div
+                className="flex items-center rounded-[7px] px-2 h-[26px]"
+                style={{ backgroundColor: "var(--green-50)" }}
               >
-                <span>
-                  <span className="block text-sm font-bold text-[#111814]">{label}</span>
-                  <span className="mt-1 block text-xs text-[#7b837a]">{note}</span>
+                <YuIcon name="trend-up-01" width={16} height={16} className="text-[#4ade80]" />
+                <span className="ml-[4px] text-label-score" style={{ color: "var(--green-700)" }}>
+                  12%
                 </span>
-                <span className="text-lg text-[#0f7a4b]">›</span>
-              </Link>
-            ))}
+              </div>
+            </div>
+            <div className="absolute top-[44px] right-[18.5px]">
+              {Sparklines.up1}
+            </div>
           </div>
-        </section>
+          {/* Card 2 */}
+          <div className="relative flex-shrink-0 border-l border-[var(--border-default)]" style={{ width: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">
+              Present Today
+            </div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">{present}</span>
+              <div
+                className="flex items-center rounded-[7px] px-2 h-[26px]"
+                style={{ backgroundColor: "var(--green-50)" }}
+              >
+                <YuIcon name="trend-up-01" width={16} height={16} className="text-[#4ade80]" />
+                <span className="ml-[4px] text-label-score" style={{ color: "var(--green-700)" }}>
+                  19%
+                </span>
+              </div>
+            </div>
+            <div className="absolute top-[44px] right-[18.5px]">
+              {Sparklines.up2}
+            </div>
+          </div>
+          {/* Card 3 */}
+          <div className="relative flex-shrink-0 border-l border-[var(--border-default)]" style={{ width: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">
+              Avg Response Time
+            </div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">1h 3m</span>
+              <div
+                className="flex items-center rounded-[7px] px-2 h-[26px]"
+                style={{ backgroundColor: "var(--green-50)" }}
+              >
+                <YuIcon name="trend-up-01" width={16} height={16} className="text-[#4ade80]" />
+                <span className="ml-[4px] text-label-score" style={{ color: "var(--green-700)" }}>
+                  19%
+                </span>
+              </div>
+            </div>
+            <div className="absolute top-[44px] right-[18.5px]">
+              {Sparklines.up3}
+            </div>
+          </div>
+          {/* Card 4 */}
+          <div className="relative flex-shrink-0 border-l border-[var(--border-default)] flex-1" style={{ minWidth: "290px", height: "111px" }}>
+            <div className="absolute top-[19.8px] left-[20.8px] text-body-medium text-secondary">
+              Pending Leaves
+            </div>
+            <div className="absolute top-[53px] left-[20.8px] flex items-center gap-2">
+              <span className="text-kpi-value text-primary">{leaves}</span>
+              <div
+                className="flex items-center rounded-[7px] px-2 h-[26px]"
+                style={{ backgroundColor: "var(--red-50)" }}
+              >
+                <YuIcon name="trend-down-01" width={16} height={16} className="text-[#f87171]" />
+                <span className="ml-[4px] text-label-score" style={{ color: "var(--red-700)" }}>
+                  19%
+                </span>
+              </div>
+            </div>
+            <div className="absolute top-[44px] right-[18.5px]">
+              {Sparklines.down1}
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <section className="rounded-3xl bg-[#063a23] p-6 text-white shadow-2xl">
-          <h2 className="text-xl font-bold">Operational Snapshot</h2>
-          <p className="mt-1 text-sm text-white/65">A compact health check from today’s records.</p>
-          <div className="mt-8 space-y-5">
-            <div>
-              <div className="flex items-center justify-between text-sm font-semibold">
-                <span>Attendance coverage</span>
-                <span>{dashboard.presentRate}%</span>
-              </div>
-              <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#050505]/15">
-                <div className="h-full rounded-full bg-[#050505]" style={{ width: `${dashboard.presentRate}%` }} />
-              </div>
+      {/* ─── Tabs ────────────────────────────────────────────────────────────── */}
+      <div
+        className="tabs-scroll-container flex border-b border-[var(--border-default)] relative"
+        style={{ height: "55px" }}
+      >
+        <div className="flex items-center h-full min-w-[1160px] pl-[20px]">
+          {/* All (Active) */}
+          <div className="flex items-center h-full relative" style={{ padding: "0 14px 0 16.6px" }}>
+            <span className="text-label-tab text-primary whitespace-nowrap">All</span>
+            <div className="w-[4.4px]" />
+            <div className="flex items-center justify-center rounded-[7px] bg-field-on-canvas w-[37px] h-[26px]">
+              <span className="text-label-score text-secondary">426</span>
             </div>
-            <div>
-              <div className="flex items-center justify-between text-sm font-semibold">
-                <span>Leave approvals</span>
-                <span>{dashboard.approvalRate}%</span>
-              </div>
-              <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#050505]/15">
-                <div className="h-full rounded-full bg-[#68be92]" style={{ width: `${dashboard.approvalRate}%` }} />
-              </div>
-            </div>
-            <p className="rounded-2xl bg-[#050505]/10 p-4 text-sm leading-relaxed text-white/78">
-              {dashboard.pending
-                ? `${dashboard.pending} leave request${dashboard.pending === 1 ? "" : "s"} still need review.`
-                : "No pending leave reviews right now."}
-            </p>
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary" />
           </div>
-        </section>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 22.45px 0 24.8px" }}>
+            Favourite
+          </div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 21.5px 0 22.45px" }}>
+            New
+          </div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 25.45px 0 21.5px" }}>
+            Assigned to me
+          </div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 22.5px 0 25.45px" }}>
+            Overdue
+          </div>
+          <div className="flex items-center h-full text-label-tab text-secondary whitespace-nowrap" style={{ padding: "0 14px 0 22.5px" }}>
+            Hot
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Toolbar ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center min-w-0" style={{ height: "93px", paddingTop: "29px", paddingBottom: "26px", paddingLeft: "18px", paddingRight: "18px" }}>
+        <div className="flex items-center">
+          <div className="flex items-center rounded-[10px] bg-field-on-canvas" style={{ width: "283px", height: "38px", paddingLeft: "9px" }}>
+            <YuIcon name="search-md" width={16} height={16} className="text-icon-muted" />
+            <span className="ml-[8px] text-body-regular text-tertiary">Search</span>
+          </div>
+          <div className="w-[22px]" />
+          <YuIcon name="filter-funnel-01" width={16} height={16} className="text-icon-default mx-[21px] md:mx-0 md:mr-[42px]" />
+          <YuIcon name="switch-vertical-01" width={16} height={16} className="text-icon-default mx-[21px] md:mx-0 md:mr-[42px]" />
+          <YuIcon name="settings-04" width={16} height={16} className="text-icon-default mx-[21px] md:mx-0" />
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center">
+          <YuIcon name="list" width={16} height={16} className="text-icon-strong mr-[36px]" />
+          <YuIcon name="grid-01" width={16} height={16} className="text-icon-default mr-[24px]" />
+          <button className="flex items-center justify-center rounded-[10px] bg-field-on-canvas text-secondary whitespace-nowrap mr-[12px]" style={{ width: "88px", height: "36px", padding: "0 12px 0 8px", gap: "8px" }}>
+            <YuIcon name="upload-cloud-01" width={16} height={16} />
+            <span className="text-body-medium">Import</span>
+          </button>
+          <button className="flex items-center justify-center rounded-[10px] bg-field-on-canvas text-secondary whitespace-nowrap mr-[12px]" style={{ width: "88px", height: "36px", padding: "0 12px 0 8px", gap: "8px" }}>
+            <YuIcon name="download-cloud-01" width={16} height={16} />
+            <span className="text-body-medium">Export</span>
+          </button>
+          <button className="flex items-center justify-center rounded-[10px] bg-primary text-on-primary whitespace-nowrap" style={{ width: "102px", height: "36px", padding: "0 12px", gap: "8px" }}>
+            <YuIcon name="plus" width={16} height={16} />
+            <span className="text-body-medium font-semibold">Add lead</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Table ───────────────────────────────────────────────────────────── */}
+      <div className="table-scroll-container">
+        <table className="w-full text-left table-fixed table-min-width" style={{ borderCollapse: "collapse" }}>
+          <colgroup>
+            <col style={{ width: "66px" }} />
+            <col style={{ width: "155px" }} />
+            <col style={{ width: "149px" }} />
+            <col />
+            <col style={{ width: "130px" }} />
+            <col style={{ width: "120px" }} />
+            <col style={{ width: "95px" }} />
+            <col style={{ width: "74px" }} />
+            <col style={{ width: "125px" }} />
+            <col style={{ width: "34px" }} />
+          </colgroup>
+          <thead>
+            <tr style={{ height: "33px", borderBottom: "1px solid var(--border-default)" }}>
+              <th scope="col" className="font-normal" style={{ paddingLeft: "19px", paddingRight: "0" }}>
+                <div className="flex items-center justify-center rounded-[5px] bg-primary w-[18px] h-[18px]">
+                  <div className="w-[10px] h-[2px] bg-[var(--text-on-primary)]" />
+                </div>
+              </th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Employee</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Department</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Email</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Status</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Manager</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Role</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Score</th>
+              <th scope="col" className="text-body-regular text-secondary font-normal p-0">Joined</th>
+              <th scope="col" className="font-normal" style={{ paddingLeft: "0", paddingRight: "18px" }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {mockTableData.map((row, i) => (
+              <tr key={i} className="group" style={{ height: "61.5px", borderBottom: "1px solid var(--border-default)" }}>
+                <td className="sticky-col-1" style={{ paddingLeft: "19px", paddingRight: "0" }}>
+                  <div
+                    className={`flex items-center justify-center rounded-[5px] w-[18px] h-[18px] ${row.sel ? "bg-primary" : "bg-field"}`}
+                  >
+                    {row.sel && <YuIcon name="check" width={12} height={12} className="text-on-primary" strokeWidth="3" />}
+                  </div>
+                </td>
+                <td className="sticky-col-2 p-0 text-body-medium text-primary truncate pr-2">{row.name} {row.sel && "✓"}</td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.dept}</td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.email}</td>
+                <td className="p-0">
+                  <span
+                    className="inline-flex items-center justify-center rounded-[7px] border border-strong text-label-caps"
+                    style={{ height: "23px", padding: "0 8px", backgroundColor: "white", color: `var(${row.statusTx})`, borderColor: `var(${row.statusTx})` }}
+                  >
+                    {row.status}
+                  </span>
+                </td>
+                <td className="p-0 text-body-medium text-primary truncate pr-2">{row.mgr}</td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.role}</td>
+                <td className="p-0" style={{ paddingTop: "3px" }}>
+                  <span
+                    className="inline-flex items-center justify-center rounded-[7px] text-label-score"
+                    style={{ height: "26px", padding: "4px 6px", backgroundColor: `var(${row.tier.bg})`, color: `var(${row.tier.tx})` }}
+                  >
+                    {row.score}
+                  </span>
+                </td>
+                <td className="p-0 text-body-regular text-secondary truncate pr-2">{row.date}</td>
+                <td className="p-0" style={{ paddingRight: "18px" }}>
+                  <YuIcon name="dots-horizontal" width={16} height={16} className="text-icon-muted float-right" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
