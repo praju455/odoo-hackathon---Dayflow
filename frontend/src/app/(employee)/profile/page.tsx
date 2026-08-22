@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
-import { generatePayslip } from "@/utils/generatePayslip";
+import { generatePayslip, type SalaryBreakdown } from "@/utils/generatePayslip";
 import SalaryEditor from "@/components/admin/SalaryEditor";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ export default function ProfilePage() {
   const [managerName, setManagerName] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError]     = useState<string | null>(null);
-  const [salaryData, setSalaryData]   = useState<any>(null);
+  const [salaryData, setSalaryData]   = useState<SalaryBreakdown | null>(null);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   const isAdmin = authUser?.role === "ADMIN";
@@ -338,7 +338,10 @@ export default function ProfilePage() {
 
       // Fetch salary for payslip download
       try {
-        const { data: salaryRes } = await api.get(`/salary/${p.id}`);
+        const { data: salaryRes } = await api.get<{
+          success: boolean;
+          data: { breakdown: SalaryBreakdown };
+        }>(`/salary/${p.id}`);
         if (salaryRes.success) {
           setSalaryData(salaryRes.data.breakdown);
         }

@@ -9,6 +9,7 @@ const navItems = [
   { label: "Employees", href: "/employees" },
   { label: "Attendance", href: "/admin/attendance", adminOnly: true },
   { label: "Time Off", href: "/admin/time-off", adminOnly: true },
+  { label: "Analytics", href: "/admin/analytics", adminOnly: true },
 ];
 
 export default function Navbar() {

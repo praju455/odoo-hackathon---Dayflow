@@ -10,7 +10,7 @@ router.get("/", authenticate, async (req, res, next) => {
     const notifications = await prisma.notification.findMany({
       where: { userId: req.user.id },
       orderBy: { createdAt: "desc" },
-      take: 20 // Recent 20
+      take: 20,
     });
     return res.json({ success: true, data: notifications });
   } catch (err) {
@@ -22,18 +22,17 @@ router.get("/", authenticate, async (req, res, next) => {
 router.patch("/:id/read", authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const notif = await prisma.notification.findUnique({ where: { id } });
-    if (!notif || notif.userId !== req.user.id) {
-      return res.status(404).json({ success: false, message: "Notification not found" });
-    }
 
-    const updated = await prisma.notification.update({
-      where: { id },
-      data: { read: true }
+    const updated = await prisma.notification.updateMany({
+      where: { id, userId: req.user.id },
+      data: { read: true },
     });
 
-    return res.json({ success: true, data: updated });
+    if (updated.count === 0) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    return res.json({ success: true });
   } catch (err) {
     next(err);
   }
@@ -44,7 +43,7 @@ router.patch("/read-all", authenticate, async (req, res, next) => {
   try {
     await prisma.notification.updateMany({
       where: { userId: req.user.id, read: false },
-      data: { read: true }
+      data: { read: true },
     });
     return res.json({ success: true, message: "All notifications marked as read." });
   } catch (err) {

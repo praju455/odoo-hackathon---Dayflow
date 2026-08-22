@@ -6,20 +6,29 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer
 } from "recharts";
 
+interface AnalyticsData {
+  attendance: Record<string, number>;
+  leaveRequests: Record<string, number>;
+  headcount: Record<string, number>;
+}
+
 export default function AnalyticsPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await api.get("/analytics/summary");
+        const res = await api.get<{ success: boolean; data: AnalyticsData }>("/analytics/summary");
         if (res.data.success) {
           setData(res.data.data);
         }
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load analytics");
+      } catch (err: unknown) {
+        setError(
+          (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            ?? "Failed to load analytics",
+        );
       } finally {
         setLoading(false);
       }
@@ -36,17 +45,19 @@ export default function AnalyticsPage() {
   }
 
   // Format data for Recharts
-  const attendanceData = Object.keys(data.attendance || {}).map(key => ({
+  if (!data) return <div className="p-8 text-red-500">Analytics data is unavailable.</div>;
+
+  const attendanceData = Object.keys(data.attendance).map(key => ({
     name: key,
     count: data.attendance[key]
   }));
 
-  const leaveData = Object.keys(data.leaveRequests || {}).map(key => ({
+  const leaveData = Object.keys(data.leaveRequests).map(key => ({
     name: key,
     value: data.leaveRequests[key]
   }));
 
-  const headcountData = Object.keys(data.headcount || {}).map(key => ({
+  const headcountData = Object.keys(data.headcount).map(key => ({
     name: key,
     count: data.headcount[key]
   }));
@@ -55,7 +66,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <h1 className="text-2xl font-bold text-white">Analytics Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Attendance Chart */}
@@ -86,7 +97,7 @@ export default function AnalyticsPage() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${String(name)} ${(Number(percent) * 100).toFixed(0)}%`}
                 >
                   {leaveData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

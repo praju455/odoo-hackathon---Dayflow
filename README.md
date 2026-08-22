@@ -6,7 +6,7 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)
@@ -28,13 +28,15 @@ Dayflow provides one connected workspace for company setup, employee onboarding,
 - Current-year leave allocation reporting
 - Monthly or yearly salary structures with fixed, percent-of-wage, and percent-of-Basic components
 - Employee and employer PF, professional tax, gross, deductions, and net salary calculations
+- Company-scoped attendance, leave, and headcount analytics
+- In-app leave-decision notifications and downloadable PDF payslips
 - Seeded demo organization with employees, attendance, leave, and salary data
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Browser[Next.js 14 client] -->|REST + JWT| API[Express API]
+    Browser[Next.js 16 client] -->|REST + JWT| API[Express API]
     API --> Guard[JWT authentication and role guards]
     Guard --> Validation[Zod request validation]
     Validation --> Services[Attendance, leave, salary, and profile logic]
@@ -57,7 +59,7 @@ Dayflow/
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Axios |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS, Axios |
 | Backend | Node.js, Express 5, Zod, JSON Web Tokens, bcryptjs |
 | Data | PostgreSQL 16, Prisma 6, versioned SQL migrations |
 | Testing | Node test runner, Next.js production build, Prisma validation |
@@ -160,6 +162,8 @@ All protected routes require `Authorization: Bearer <token>`.
 | Attendance | `POST /api/attendance/checkin`, `POST /api/attendance/checkout`, `GET /api/attendance/me`, `GET /api/attendance/day` |
 | Leave | `GET /api/leave/allocations/me`, `GET /api/leave/allocations/:userId`, `POST /api/leave`, `GET /api/leave/me`, `GET /api/leave`, `PUT /api/leave/:id/status` |
 | Salary | `GET /api/salary/me`, `GET/PUT /api/salary/:userId` |
+| Analytics | `GET /api/analytics/summary` |
+| Notifications | `GET /api/notifications`, `PATCH /api/notifications/read-all`, `PATCH /api/notifications/:id/read` |
 
 API errors use a consistent JSON shape:
 

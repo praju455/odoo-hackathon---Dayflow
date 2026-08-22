@@ -7,21 +7,16 @@ const router = express.Router();
 // GET /api/analytics/summary
 router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const currentMonthStart = new Date();
-    currentMonthStart.setDate(1);
-    currentMonthStart.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
-    // 1. Attendance % this month
     const attendanceStats = await prisma.attendance.groupBy({
-      by: ['status'],
+      by: ["status"],
       where: {
-        checkIn: {
-          gte: currentMonthStart
-        }
+        checkIn: { gte: currentMonthStart },
+        user: { companyId: req.user.companyId },
       },
-      _count: {
-        id: true
-      }
+      _count: { id: true },
     });
 
     const attendanceSummary = attendanceStats.reduce((acc, curr) => {
@@ -29,12 +24,10 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
       return acc;
     }, {});
 
-    // 2. Leave Requests by status
     const leaveStats = await prisma.leaveRequest.groupBy({
-      by: ['status'],
-      _count: {
-        id: true
-      }
+      by: ["status"],
+      where: { user: { companyId: req.user.companyId } },
+      _count: { id: true },
     });
 
     const leaveSummary = leaveStats.reduce((acc, curr) => {
@@ -42,20 +35,17 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
       return acc;
     }, {});
 
-    // 3. Headcount by department
     const headcountStats = await prisma.user.groupBy({
-      by: ['department'],
+      by: ["department"],
       where: {
-        role: 'EMPLOYEE' // Only count employees if needed, but let's count everyone
+        companyId: req.user.companyId,
+        role: "EMPLOYEE",
       },
-      _count: {
-        id: true
-      }
+      _count: { id: true },
     });
-    
-    // Default to 'Unassigned' if department is null
+
     const headcountSummary = headcountStats.reduce((acc, curr) => {
-      const dept = curr.department || 'Unassigned';
+      const dept = curr.department || "Unassigned";
       acc[dept] = curr._count.id;
       return acc;
     }, {});
@@ -65,8 +55,8 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
       data: {
         attendance: attendanceSummary,
         leaveRequests: leaveSummary,
-        headcount: headcountSummary
-      }
+        headcount: headcountSummary,
+      },
     });
   } catch (err) {
     next(err);

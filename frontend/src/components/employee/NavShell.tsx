@@ -8,6 +8,13 @@ import { useAuth } from "@/context/AuthContext";
 import { useAttendanceStatus, TodayAttendanceStatus } from "@/context/AttendanceStatusContext";
 import { api } from "@/lib/api";
 
+interface Notification {
+  id: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
 // ─── Nav tabs ─────────────────────────────────────────────────────────────────
 // Employees → Member 4's directory landing page
 // Attendance → Member 3's Step 6
@@ -77,17 +84,19 @@ export default function NavShell() {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    api.get("/notifications").then(res => setNotifications(res.data.data)).catch(() => {});
+    api.get<{ data: Notification[] }>("/notifications")
+      .then((response) => setNotifications(response.data.data))
+      .catch(() => setNotifications([]));
   }, []);
 
   useEffect(() => {
     if (notifOpen && notifications.some(n => !n.read)) {
-      api.patch("/notifications/read-all").then(() => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      });
+      api.patch("/notifications/read-all")
+        .then(() => setNotifications((current) => current.map((item) => ({ ...item, read: true }))))
+        .catch(() => undefined);
     }
   }, [notifOpen, notifications]);
 
@@ -111,7 +120,7 @@ export default function NavShell() {
       document.addEventListener("mousedown", onClickOutside);
     }
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [dropdownOpen]);
+  }, [dropdownOpen, notifOpen]);
 
   // Close dropdown on route change (e.g. navigating via My Profile link)
   useEffect(() => {
@@ -199,6 +208,8 @@ export default function NavShell() {
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setNotifOpen(!notifOpen)}
+              aria-label="Open notifications"
+              aria-expanded={notifOpen}
               className="relative p-2 text-slate-400 hover:text-white transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
