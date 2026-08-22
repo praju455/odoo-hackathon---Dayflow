@@ -225,6 +225,14 @@ router.patch("/requests/:id", authenticate, requireAdmin, async (req, res, next)
         data: { status, adminComment }
       });
 
+      // 1b. Create notification for the employee
+      await tx.notification.create({
+        data: {
+          userId: leaveReq.userId,
+          message: `Your leave request from ${new Date(leaveReq.startDate).toLocaleDateString()} to ${new Date(leaveReq.endDate).toLocaleDateString()} was ${status.toLowerCase()}.`
+        }
+      });
+
       // 2. If APPROVED and not UNPAID, deduct from allocation
       if (status === "APPROVED" && leaveReq.leaveType !== "UNPAID") {
         const year = new Date(leaveReq.startDate).getFullYear();

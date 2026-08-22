@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import { generatePayslip } from "@/utils/generatePayslip";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,7 @@ export default function ProfilePage() {
   const [managerName, setManagerName] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError]     = useState<string | null>(null);
+  const [salaryData, setSalaryData]   = useState<any>(null);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   const isAdmin = authUser?.role === "ADMIN";
@@ -335,6 +337,16 @@ export default function ProfilePage() {
         } catch {
           setManagerName(null); // non-fatal: show "—" instead
         }
+      }
+
+      // Fetch salary for payslip download
+      try {
+        const { data: salaryRes } = await api.get(`/salary/${p.id}`);
+        if (salaryRes.success) {
+          setSalaryData(salaryRes.data.breakdown);
+        }
+      } catch {
+        // Ignore if no salary is defined yet
       }
     } catch {
       setPageError("Failed to load profile. Please refresh the page.");
@@ -481,15 +493,29 @@ export default function ProfilePage() {
 
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h1 className="text-xl font-bold text-white truncate">{profile.name}</h1>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border
-              ${isAdmin
-                ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                : "bg-indigo-500/15 text-indigo-400 border-indigo-500/30"
-              }`}>
-              {profile.role}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-white truncate">{profile.name}</h1>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border
+                ${isAdmin
+                  ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  : "bg-indigo-500/15 text-indigo-400 border-indigo-500/30"
+                }`}>
+                {profile.role}
+              </span>
+            </div>
+            {salaryData && (
+              <button
+                onClick={() => generatePayslip(profile, salaryData)}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
+                title="Download this month's payslip"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Payslip
+              </button>
+            )}
           </div>
           <p className="text-slate-400 text-sm">
             {[profile.jobTitle, profile.department].filter(Boolean).join(" · ") || "No title set"}

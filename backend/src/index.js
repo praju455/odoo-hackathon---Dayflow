@@ -22,9 +22,11 @@ app.get("/api/health", (_req, res) => {
 // app.use("/api/companies", require("./routes/companies"));
 
 // ── Member 2 routes ──────────────────────────────────────────
-app.use("/api/attendance", require("./routes/attendance"));
-app.use("/api/leave",      require("./routes/leave"));
-app.use("/api/salary",     require("./routes/salary"));
+app.use("/api/attendance",    require("./routes/attendance"));
+app.use("/api/leave",         require("./routes/leave"));
+app.use("/api/salary",        require("./routes/salary"));
+app.use("/api/analytics",     require("./routes/analytics"));
+app.use("/api/notifications", require("./routes/notifications"));
 
 // ── Global error handler ──────────────────────────────────────
 app.use((err, _req, res, _next) => {

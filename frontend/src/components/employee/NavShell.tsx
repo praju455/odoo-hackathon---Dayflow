@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useAttendanceStatus, TodayAttendanceStatus } from "@/context/AttendanceStatusContext";
+import { api } from "@/lib/api";
 
 // ─── Nav tabs ─────────────────────────────────────────────────────────────────
 // Employees → Member 4's directory landing page
@@ -73,7 +74,23 @@ export default function NavShell() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close the dropdown when the user clicks outside it
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get("/notifications").then(res => setNotifications(res.data.data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (notifOpen && notifications.some(n => !n.read)) {
+      api.patch("/notifications/read-all").then(() => {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      });
+    }
+  }, [notifOpen, notifications]);
+
+  // Close the dropdowns when the user clicks outside
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (
@@ -82,8 +99,14 @@ export default function NavShell() {
       ) {
         setDropdownOpen(false);
       }
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(e.target as Node)
+      ) {
+        setNotifOpen(false);
+      }
     }
-    if (dropdownOpen) {
+    if (dropdownOpen || notifOpen) {
       document.addEventListener("mousedown", onClickOutside);
     }
     return () => document.removeEventListener("mousedown", onClickOutside);
@@ -169,6 +192,41 @@ export default function NavShell() {
               {todayStatus === "ABSENT"  && "Absent"}
               {todayStatus === "LEAVE"   && "On leave"}
             </span>
+          </div>
+
+          {/* ── Notification Bell ──── */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="relative p-2 text-slate-400 hover:text-white transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              {notifications.some(n => !n.read) && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-slate-900" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-slate-800 border border-slate-700/50 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="px-4 py-3 border-b border-slate-700/50">
+                  <p className="text-white text-sm font-medium">Notifications</p>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <p className="p-4 text-xs text-slate-400 text-center">No notifications yet.</p>
+                  ) : (
+                    notifications.map(n => (
+                      <div key={n.id} className="p-4 border-b border-slate-700/50 last:border-0 hover:bg-slate-700/30 transition-colors">
+                        <p className="text-sm text-slate-200">{n.message}</p>
+                        <p className="text-[10px] text-slate-500 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Avatar button + dropdown ──── */}

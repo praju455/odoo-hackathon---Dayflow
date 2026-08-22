@@ -104,6 +104,7 @@ model User {
   leaveAllocations LeaveAllocation[]
   leaveRequests    LeaveRequest[]
   salaryStructure  SalaryStructure?
+  notifications    Notification[]
 
   @@index([companyId])
   @@index([managerId])
@@ -232,4 +233,20 @@ model SalaryComponent {
   salaryStructure SalaryStructure @relation(fields: [salaryStructureId], references: [id], onDelete: Cascade)
 
   @@index([salaryStructureId])
+}
+
+// ─────────────────────────────────────────
+// In-App Notifications
+// ─────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
