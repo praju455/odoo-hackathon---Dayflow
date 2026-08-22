@@ -28,8 +28,6 @@ Most small and mid-sized organizations run HR operations on a patchwork of sprea
 
 ## ✨ Novelty & Unique Selling Points
 
-In an 8-hour hackathon, we focused on building features that feel like a real enterprise product rather than a static toy:
-
 *   🔐 **Credentials you don't type, you earn:** Auto-generated Login IDs (company code + initials + join year + serial) mirroring real enterprise HR systems.
 *   🟢 **Presence as a first-class citizen:** Live status dots on the employee directory (Present, On Leave, Absent) — closer to a Slack status indicator than a static spreadsheet.
 *   🧮 **A salary engine, not a salary field:** Percentage-based, auto-recalculating, cascading components with hard caps against over-allocation.
@@ -38,14 +36,39 @@ In an 8-hour hackathon, we focused on building features that feel like a real en
 
 ---
 
-## 🛠️ System Architecture & Tech Stack
+## 🏗️ System Architecture & Tech Stack
 
-Dayflow's stack was chosen specifically to satisfy the constraint of having **dynamic data** while avoiding cloud-lock-in or forced subscriptions.
+Dayflow is built on a modern, robust tech stack emphasizing data integrity and offline capabilities. 
 
+### Technology Stack
 *   **Frontend:** Next.js (React), Tailwind CSS, Axios
 *   **Backend:** Node.js, Express.js
-*   **Database & ORM:** PostgreSQL / SQLite, Prisma ORM
+*   **Database & ORM:** PostgreSQL, Prisma ORM
 *   **Security:** JWT (JSON Web Tokens), Bcrypt for password hashing, Zod for robust input validation.
+
+### Architecture Diagram
+
+```mermaid
+graph TD
+    User([End User / Admin]) -->|Interacts with UI| UI[Next.js Frontend]
+    
+    subgraph Dayflow System Architecture
+        UI -->|REST API Requests| API[Express.js Backend API]
+        
+        API -->|Validates Input| Zod[Zod Validation Layer]
+        API -->|Authenticates| Auth[JWT & Bcrypt Security]
+        
+        Zod --> Core[Core Business Logic Engines]
+        Auth --> Core
+        
+        Core -->|Computes| Salary[Salary & Tax Calculation Engine]
+        Core -->|Updates| Leave[Leave & Attendance Ledger]
+        
+        Core -->|Queries & Mutates| Prisma[Prisma ORM]
+    end
+    
+    Prisma -->|Reads / Writes| DB[(PostgreSQL Database)]
+```
 
 ---
 
@@ -101,23 +124,12 @@ npm run dev
 
 ---
 
-## 👥 Hackathon Team Split & Execution
-
-Dayflow was built in a grueling 8-hour sprint, cleanly divided across 4 members to avoid merge conflicts and maximize velocity:
-
-*   **Member 1 (Backend):** Authentication, Company/Admin setup, Login ID generator, Employee CRUD, Profile API endpoints.
-*   **Member 2 (Backend):** Attendance core, Leave allocation & approval engine, Salary calculation math, PF & Professional Tax logic.
-*   **Member 3 (Frontend):** Login flows, Password change workflows, My Profile editable views, Check-in/out widgets, Personal Time-Off screens.
-*   **Member 4 (Frontend):** Live Employee Directory grid, Add Employee workflows, Admin approval interfaces for leave and salary, Final UI integration.
-
----
-
 ## 🛡️ Hackathon Constraints Achieved
 
 *   ✅ **Real/Dynamic Data Sources:** No static JSON mocking. All features read/write to the Prisma relational database.
-*   ✅ **Robust Validation:** Implemented using Zod on the backend.
-*   ✅ **Responsive & Clean UI:** Hand-crafted using Tailwind CSS.
-*   ✅ **Proper Git Usage:** Clear commit histories tracking 4 distinct members contributing to both frontend and backend modules.
+*   ✅ **Robust Validation:** Implemented using Zod on the backend, ensuring guaranteed data integrity.
+*   ✅ **Responsive & Clean UI:** Hand-crafted using Tailwind CSS for a seamless user experience.
+*   ✅ **Proper Git Usage:** Cleanly merged and tracked version history showcasing full stack development across both frontend and backend modules.
 
 <div align="center">
   <i>Prepared for the 8-Hour Hackathon Submission</i>
