@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 
 const setupRoutes = require("./routes/setup");
+const employeeRoutes = require("./routes/employees");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/setup", setupRoutes);
+app.use("/api/employees", employeeRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
