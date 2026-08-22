@@ -159,6 +159,14 @@ Authenticated users. Returns own full profile without password or salary data.
 Authenticated users can update:
 
 - `phone`
+- `dateOfBirth`
+- `gender`
+- `maritalStatus`
+- `personalEmail`
+- `panCode`
+- `uanCode`
+- `accountNumber`
+- `homeAddress`
 - `profilePictureUrl`
 - `about`
 - `skills`
