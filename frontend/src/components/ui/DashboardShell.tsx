@@ -14,20 +14,30 @@ const titles: Record<string, string> = {
   "/attendance": "My workday",
   "/profile": "My profile",
   "/time-off": "Time off",
+  "/dashboard": "Dashboard",
+  "/analytics": "Analytics",
+  "/projects": "Projects",
+  "/chat": "Team Chat",
+  "/messages": "Messages",
 };
 
 const adminItems = [
-  { label: "Overview", href: "/admin/analytics", icon: "grid-01" as const },
-  { label: "People", href: "/employees", icon: "users-01" as const },
-  { label: "Attendance", href: "/admin/attendance", icon: "check" as const },
-  { label: "Time off", href: "/admin/time-off", icon: "clipboard" as const },
+  { label: "Overview",    href: "/admin/analytics",  icon: "grid-01" as const },
+  { label: "People",      href: "/employees",         icon: "users-01" as const },
+  { label: "Attendance",  href: "/admin/attendance",  icon: "check" as const },
+  { label: "Time off",    href: "/admin/time-off",    icon: "clipboard" as const },
 ];
 
 const employeeItems = [
-  { label: "My workday", href: "/attendance", icon: "target-04" as const },
-  { label: "My profile", href: "/profile", icon: "user-plus-01" as const },
-  { label: "Time off", href: "/time-off", icon: "clipboard" as const },
-  { label: "Directory", href: "/employees", icon: "users-01" as const },
+  { label: "Dashboard",   href: "/dashboard",   icon: "home" as const },
+  { label: "Analytics",   href: "/analytics",   icon: "analytics" as const },
+  { label: "Projects",    href: "/projects",    icon: "folder" as const },
+  { label: "My workday",  href: "/attendance",  icon: "target-04" as const },
+  { label: "Time off",    href: "/time-off",    icon: "clipboard" as const },
+  { label: "Chat",        href: "/chat",        icon: "chat" as const },
+  { label: "Messages",    href: "/messages",    icon: "mail" as const },
+  { label: "My profile",  href: "/profile",     icon: "user-plus-01" as const },
+  { label: "Directory",   href: "/employees",   icon: "users-01" as const },
 ];
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
