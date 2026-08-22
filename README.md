@@ -1,116 +1,177 @@
 <div align="center">
-  
-# 🌊 Dayflow HRMS
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
-[![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=next.js)](#)
-[![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?logo=nodedotjs)](#)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](#)
-[![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748?logo=prisma)](#)
+  <h1 align="center">Dayflow HRMS</h1>
 
-*A lightweight, offline-capable Human Resource Management System (HRMS) built to replace spreadsheets with a unified, transparent data model for attendance, leave balances, and salary computations.*
+  <p align="center">
+    <strong>Every workday, perfectly aligned.</strong>
+    <br />
+    A modern, lightweight, and offline-capable Human Resource Management System.
+  </p>
 
+  <p align="center">
+    <a href="#-core-philosophy"><img src="https://img.shields.io/badge/Philosophy-Local--First-2D3748?style=for-the-badge" alt="Local First" /></a>
+    <a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-Event--Driven-336791?style=for-the-badge" alt="Event Driven" /></a>
+    <a href="#-tech-stack"><img src="https://img.shields.io/badge/Stack-Next.js%20%7C%20Node-000000?style=for-the-badge&logo=next.js" alt="Tech Stack" /></a>
+  </p>
 </div>
 
----
+<hr />
 
-## 🎯 Project Overview
-
-Small organizations often suffer from fragmented HR data: attendance in registers, leave balances in Excel, and salary structures in isolated PDFs. **Dayflow** solves this by unifying these pillars into a single, cohesive, relational database application.
-
-**Key Capabilities:**
-*   **Live Presence Directory:** Real-time visibility of employee status (Present, On Leave, Absent) directly on the organizational directory.
-*   **Transactional Leave Ledger:** Leave approvals mathematically deduct from an employee's annual allocation via atomic database transactions, ensuring zero race conditions.
-*   **Dynamic Salary Engine:** A sophisticated payroll module that computes percentage-based cascading components (e.g., HRA as % of Basic), enforcing hard caps against over-allocation while automatically calculating statutory Provident Fund (PF) and Professional Tax deductions.
-*   **Auto-Generated Credentials:** Enterprise-grade onboarding where system-generated IDs (e.g., `CORP-DS-2026-001`) replace manual sign-ups.
+## 📋 Table of Contents
+1. [Core Philosophy](#-core-philosophy)
+2. [Key Capabilities](#-key-capabilities)
+3. [System Architecture](#-system-architecture)
+4. [Data Model](#-data-model)
+5. [API Structure](#-api-structure)
+6. [Getting Started](#-getting-started)
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## 💡 Core Philosophy
 
-Dayflow is engineered for **data integrity** and **local-first deployment**, allowing high-privacy organizations to run it on a local network without cloud vendor lock-in.
+**Dayflow** was engineered to solve the data fragmentation problem inherent in small-to-medium enterprise (SME) HR operations. By moving away from disconnected spreadsheets and legacy cloud suites, Dayflow offers a **unified, transparent data model** that acts as the single source of truth for organizational presence, time-off ledgers, and payroll computation.
+
+Designed as a **local-first** application, Dayflow ensures that highly-sensitive employee data remains within the organization's perimeter, requiring zero external cloud dependencies to function natively.
+
+---
+
+## 🚀 Key Capabilities
+
+<table>
+  <tr>
+    <td width="50%">
+      <h3>🟢 Live Presence Directory</h3>
+      <p>A real-time organizational directory reflecting live employee status (Present, On Leave, Absent). Replaces static employee lists with a dynamic presence view akin to modern communication tools.</p>
+    </td>
+    <td width="50%">
+      <h3>⚖️ Transactional Leave Ledger</h3>
+      <p>Leave approvals are backed by atomic database transactions. When an Admin approves a request, days are mathematically deducted from the annual allocation, guaranteeing zero race conditions.</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>🧮 Dynamic Salary Engine</h3>
+      <p>A sophisticated payroll module computing percentage-based cascading components (e.g., HRA as % of Basic). Enforces hard caps against over-allocation and auto-calculates statutory deductions (PF/PT).</p>
+    </td>
+    <td>
+      <h3>🔐 Enterprise Onboarding</h3>
+      <p>System-generated alphanumeric IDs (e.g., <code>CORP-DS-2026-001</code>) replace manual sign-ups, enforcing standard corporate nomenclature and preventing unauthorized access.</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ System Architecture
+
+Dayflow employs a decoupled client-server architecture, communicating via strict RESTful endpoints secured by JSON Web Tokens (JWT).
+
+### Request Lifecycle
+```mermaid
+sequenceDiagram
+    participant Client as Next.js Client
+    participant Gateway as Express Router
+    participant Auth as JWT Middleware
+    participant Validator as Zod Validator
+    participant Engine as Business Engine
+    participant DB as PostgreSQL (Prisma)
+
+    Client->>Gateway: HTTP Request (e.g., Leave Approval)
+    Gateway->>Auth: Validate Token & Role
+    Auth-->>Gateway: Authorization Granted
+    Gateway->>Validator: Enforce Schema Types
+    Validator-->>Gateway: Payload Sanitized
+    Gateway->>Engine: Execute Business Logic
+    Engine->>DB: Atomic $transaction
+    DB-->>Engine: Commit Success
+    Engine-->>Client: 200 OK (JSON Response)
+```
 
 ### Technology Stack
-*   **Client:** React 18, Next.js 14, Tailwind CSS, Axios
-*   **Server:** Node.js, Express.js
-*   **Database:** PostgreSQL 16 (via Docker)
-*   **ORM:** Prisma Client
-*   **Security & Validation:** JWT (Auth), Bcrypt (Hashing), Zod (Strict Payload Validation)
+- **Client Presentation:** React 18, Next.js 14, Tailwind CSS
+- **API Services:** Node.js, Express.js
+- **Data Persistence:** PostgreSQL 16
+- **Object Relational Mapping:** Prisma ORM
+- **Security Primitives:** bcryptjs (Hashing), Zod (Schema Validation)
 
-### System Flow Diagram
+---
 
-```mermaid
-graph TD
-    Client([Client / Browser]) -->|HTTPS REST| API[Express API Gateway]
-    
-    subgraph Backend Infrastructure
-        API -->|Middleware| Auth[JWT Authentication]
-        API -->|Middleware| Validator[Zod Input Validation]
-        
-        Auth --> Controllers
-        Validator --> Controllers
-        
-        subgraph Business Logic Engines
-            Controllers -->|Action| SalaryEngine[Salary Math Engine]
-            Controllers -->|Action| LeaveLedger[Leave Transaction Ledger]
-            Controllers -->|Action| AttendanceTracker[Attendance Tracker]
-        end
-        
-        SalaryEngine --> ORM[Prisma ORM]
-        LeaveLedger --> ORM
-        AttendanceTracker --> ORM
-    end
-    
-    ORM -->|TCP Connection| DB[(PostgreSQL Database)]
+## 🗄️ Data Model
+
+<details>
+<summary><strong>Click to expand Entity Relationship overview</strong></summary>
+
+- **`User` / `Company`:** Multi-tenant architecture foundation. Manages hierarchical reporting lines (`managerId`) and RBAC (`Role` enum).
+- **`Attendance`:** Records `checkIn` / `checkOut` timestamps. A background chronological trigger derives daily `workHours` and `extraHours`.
+- **`LeaveAllocation` / `LeaveRequest`:** Scoped annually. Ensures an employee cannot consume more `PAID` or `SICK` days than statically allocated.
+- **`SalaryStructure` / `SalaryComponent`:** 1-to-N relationship defining the base wage and polymorphic components (`FIXED`, `PERCENT_OF_BASIC`, `PERCENT_OF_WAGE`).
+
+</details>
+
+---
+
+## 💻 API Structure
+
+The Dayflow backend exposes predictable REST APIs. All payloads enforce strict schema validation to guarantee data integrity before hitting the persistence layer.
+
+**Example: Salary Structure Definition Payload**
+```json
+{
+  "wageType": "MONTHLY",
+  "fixedWage": 50000,
+  "pfEmployeePercent": 12,
+  "professionalTax": 200,
+  "components": [
+    {
+      "name": "House Rent Allowance",
+      "compType": "PERCENT_OF_BASIC",
+      "value": 40
+    },
+    {
+      "name": "Performance Bonus",
+      "compType": "FIXED",
+      "value": 2000
+    }
+  ]
+}
 ```
 
 ---
 
-## 🗄️ Core Data Model
+## ⚙️ Getting Started
 
-*   **`User` & `Company`:** Multi-tenant ready schema. Supports role-based access control (Admin vs. Employee).
-*   **`Attendance`:** Tracks `checkIn`, `checkOut`, and automatically derives `workHours` and `extraHours`. Statuses: `PRESENT`, `ABSENT`, `HALF_DAY`, `LEAVE`.
-*   **`LeaveAllocation` & `LeaveRequest`:** Scoped by calendar year. Requests are bound to specific types (`PAID`, `SICK`, `UNPAID`).
-*   **`SalaryStructure` & `SalaryComponent`:** 1-to-many relationship defining the fixed base wage alongside variable/fixed earnings (`PERCENT_OF_BASIC`, `PERCENT_OF_WAGE`, `FIXED`).
+Dayflow is container-ready. We recommend using Docker for the data tier during local development.
 
----
-
-## 🚀 Quickstart Guide
-
-### 1. Database & Backend
-Ensure you have Docker and Node.js installed.
-
+### 1. Environment Configuration
 ```bash
-# 1. Clone & enter directory
 git clone https://github.com/praju455/odoo-hackathon---Dayflow.git
 cd odoo-hackathon---Dayflow
+docker-compose up -d  # Spin up PostgreSQL
+```
 
-# 2. Start PostgreSQL
-docker-compose up -d
+### 2. Microservices Boot
+*Run these in separate terminal multiplexer panes (e.g., tmux) or standard terminal windows.*
 
-# 3. Setup Backend
+**Pane 1: API Server**
+```bash
 cd backend
 npm install
 cp .env.example .env
-
-# 4. Migrate Database & Start Server
-npm run db:generate
-npm run db:migrate
+npm run db:generate && npm run db:migrate
 npm run dev
-# Backend runs on http://localhost:3000
 ```
 
-### 2. Frontend Application
-In a separate terminal window:
-
+**Pane 2: Web Client**
 ```bash
 cd frontend
 npm install
 npm run dev
-# Frontend runs on http://localhost:3001
 ```
 
----
+Access the application at `http://localhost:3001`.
+
+<br />
+
 <div align="center">
-  <i>Built for the 8-Hour HRMS Hackathon</i>
+  <sub>Engineered for the 8-Hour HRMS Hackathon. Built with discipline.</sub>
 </div>
