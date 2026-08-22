@@ -18,11 +18,13 @@ export interface AuthUser {
   email: string;
   loginId: string;
   role: UserRole;
-  companyId: string;
+  mustChangePassword: boolean;
+  // These fields are NOT returned by POST /api/auth/login (confirmed from auth.js).
+  // They are populated later if fetched via GET /api/users/me.
+  companyId?: string;
   department?: string;
   jobTitle?: string;
   profilePictureUrl?: string;
-  mustChangePassword: boolean;
 }
 
 interface AuthContextValue {

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import NavShell from "@/components/employee/NavShell";
+import CheckInWidget from "@/components/employee/CheckInWidget";
 import { AttendanceStatusProvider } from "@/context/AttendanceStatusContext";
 
 // ─── Auth-guarded layout for all (employee) routes ───────────────────────────
@@ -80,6 +81,12 @@ export default function EmployeeLayout({
     <AttendanceStatusProvider>
       <div className="min-h-screen bg-slate-950">
         <NavShell />
+        {/*
+          CheckInWidget floats fixed bottom-right over every employee page.
+          It lives here (inside AttendanceStatusProvider) so it can call
+          setTodayStatus to flip the nav dot on check-in/out.
+        */}
+        <CheckInWidget />
         {/*
           pt-16 offsets the fixed nav bar (h-16 = 64px).
           Pages fill the rest of the viewport below the nav.

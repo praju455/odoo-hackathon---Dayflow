@@ -6,11 +6,14 @@ import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import type { AuthUser } from "@/context/AuthContext";
 
-// ─── API response shape (matches Member 1's POST /api/auth/login) ─────────────
+// ─── API response shape (confirmed from backend/src/routes/auth.js) ──────────
+// POST /api/auth/login returns:
+//   { token, mustChangePassword, user: { id, loginId, name, email, role } }
+// Note: companyId / department / profilePictureUrl are NOT in the login response.
 interface LoginResponse {
   token: string;
-  user: AuthUser;
   mustChangePassword: boolean;
+  user: Pick<AuthUser, "id" | "loginId" | "name" | "email" | "role">;
 }
 
 export default function LoginPage() {
@@ -40,20 +43,25 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // TODO: confirm exact field name with Member 1's backend/README.md
-      // Assumed: body uses "identifier" for the loginId-or-email field.
-      // Member 1's prompt says "accepts loginId-or-email + password" but doesn't
-      // name the JSON key — verify it's "identifier" (not "loginId", "login", etc.)
+      // Confirmed from backend/src/routes/auth.js:
+      // Body field name is "identifier" (accepts loginId or email).
+      // mustChangePassword lives at response root AND inside user object (both set identically).
       const { data } = await api.post<LoginResponse>("/auth/login", {
         identifier: identifier.trim(),
         password,
       });
 
-      // Persist token + user in context (also saves to localStorage)
-      login(data.token, data.user);
+      // Build the full AuthUser from what the login endpoint actually returns,
+      // merging mustChangePassword (which comes from the top-level response field).
+      const authUser: AuthUser = {
+        ...data.user,
+        mustChangePassword: data.mustChangePassword,
+      };
+
+      login(data.token, authUser);
 
       // If first login, force password change before anything else
-      if (data.mustChangePassword || data.user.mustChangePassword) {
+      if (data.mustChangePassword) {
         router.push("/change-password");
       } else {
         router.push("/employees"); // Member 4's landing page
