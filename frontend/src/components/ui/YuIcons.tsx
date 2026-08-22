@@ -185,6 +185,36 @@ const iconMap = {
       <path d="M16 3.13a4 4 0 010 7.75" />
     </svg>
   ),
+  // ─── New icons for employee nav ─────────────────────────────────────────
+  home: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  ),
+  analytics: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  ),
+  folder: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+    </svg>
+  ),
+  chat: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+    </svg>
+  ),
+  mail: (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <polyline points="22,6 12,13 2,6" />
+    </svg>
+  ),
 };
 
 export const YuIcon = ({ name, ...props }: IconProps & { name: keyof typeof iconMap }) => {
