@@ -22,7 +22,7 @@ app.use("/api/users", userRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ error: "Something went wrong" });
+  res.status(err.status || 500).json({ error: err.message || "Something went wrong" });
 });
 
 app.listen(port, () => {

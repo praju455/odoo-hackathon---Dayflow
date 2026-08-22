@@ -7,6 +7,7 @@ const { authenticate, requireAdmin } = require("../middleware/auth");
 const { generateLoginId, splitName } = require("../utils/loginId");
 const { generateTempPassword } = require("../utils/password");
 const { toDirectoryUser, toUserProfile } = require("../utils/userResponse");
+const { formatZodError } = require("../utils/validation");
 
 const router = express.Router();
 
@@ -72,7 +73,7 @@ router.post("/", authenticate, requireAdmin, async (req, res, next) => {
     const parsed = createEmployeeSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid employee details" });
+      return res.status(400).json({ error: formatZodError(parsed) });
     }
 
     const data = parsed.data;
@@ -168,7 +169,7 @@ router.put("/:id", authenticate, requireAdmin, async (req, res, next) => {
     const parsed = updateEmployeeSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid employee details" });
+      return res.status(400).json({ error: formatZodError(parsed) });
     }
 
     const existingUser = await prisma.user.findFirst({

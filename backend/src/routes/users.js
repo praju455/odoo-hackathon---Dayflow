@@ -4,6 +4,7 @@ const { z } = require("zod");
 const prisma = require("../db");
 const { authenticate } = require("../middleware/auth");
 const { toUserProfile } = require("../utils/userResponse");
+const { formatZodError } = require("../utils/validation");
 
 const router = express.Router();
 
@@ -62,7 +63,7 @@ router.put("/me", authenticate, async (req, res, next) => {
     const parsed = selfUpdateSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid profile details" });
+      return res.status(400).json({ error: formatZodError(parsed) });
     }
 
     const user = await prisma.user.update({

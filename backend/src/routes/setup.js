@@ -5,6 +5,7 @@ const { z } = require("zod");
 
 const prisma = require("../db");
 const { generateLoginId, splitName } = require("../utils/loginId");
+const { formatZodError } = require("../utils/validation");
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.post("/", async (req, res, next) => {
     const parsed = setupSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid setup details" });
+      return res.status(400).json({ error: formatZodError(parsed) });
     }
 
     const data = parsed.data;

@@ -5,6 +5,7 @@ const { z } = require("zod");
 
 const prisma = require("../db");
 const { authenticate } = require("../middleware/auth");
+const { formatZodError } = require("../utils/validation");
 
 const router = express.Router();
 
@@ -35,7 +36,7 @@ router.post("/login", async (req, res, next) => {
     const parsed = loginSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid login details" });
+      return res.status(400).json({ error: formatZodError(parsed) });
     }
 
     const { identifier, password } = parsed.data;
@@ -79,7 +80,7 @@ router.put("/change-password", authenticate, async (req, res, next) => {
     const parsed = changePasswordSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid password details" });
+      return res.status(400).json({ error: formatZodError(parsed) });
     }
 
     const user = await prisma.user.findUnique({
