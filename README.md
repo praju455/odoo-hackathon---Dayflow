@@ -9,6 +9,10 @@
   </p>
 
   <p align="center">
+    <a href="https://odoo-hackathon-shiftly.vercel.app/" target="_blank"><img src="https://img.shields.io/badge/Live_Demo-Visit_App-00C7B7?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+  </p>
+
+  <p align="center">
     <a href="#-core-philosophy"><img src="https://img.shields.io/badge/Philosophy-Local--First-2D3748?style=for-the-badge" alt="Local First" /></a>
     <a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-Event--Driven-336791?style=for-the-badge" alt="Event Driven" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/Stack-Next.js%20%7C%20Node-000000?style=for-the-badge&logo=next.js" alt="Tech Stack" /></a>

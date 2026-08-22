@@ -21,6 +21,20 @@ Create `backend/.env` from `backend/.env.example`.
 
 > **Note:** The project uses Supabase (PostgreSQL). Use `prisma db push` instead of `prisma migrate dev` since the migration history references SQLite enums not available in PostgreSQL.
 
+## Test Accounts (from Database Seed)
+
+You can log in to the frontend using either the **Email** or **Login ID** and the universal password `Dayflow123!`.
+
+**Admin Account**
+- **Email:** `admin@dayflow.local`
+- **Login ID:** `SFAVMO20260001`
+- **Role:** Admin (Access to all overviews, company projects, and employee management)
+
+**Employee Accounts (Examples)**
+- **Email:** `mason@shiftly.local` (Login ID: `SFMAAL20260004`) — Engineering
+- **Email:** `amara@shiftly.local` (Login ID: `SFAMDI20260021`) — Sales
+- **Email:** `ethan@dayflow.local` (Login ID: `SFETWI20260016`) — Finance
+
 ## Environment Variables
 
 | Variable | Required | Description |
