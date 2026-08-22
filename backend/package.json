@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "shiftly-backend",
   "version": "1.0.0",
-  "description": "Dayflow HRMS backend",
+  "description": "Shiftly HRMS backend",
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {

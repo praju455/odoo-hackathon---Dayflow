@@ -1,6 +1,6 @@
 <div align="center">
 
-  <h1 align="center">Dayflow HRMS</h1>
+  <h1 align="center">Shiftly HRMS</h1>
 
   <p align="center">
     <strong>Every workday, perfectly aligned.</strong>
@@ -29,9 +29,9 @@
 
 ## 💡 Core Philosophy
 
-**Dayflow** was engineered to solve the data fragmentation problem inherent in small-to-medium enterprise (SME) HR operations. By moving away from disconnected spreadsheets and legacy cloud suites, Dayflow offers a **unified, transparent data model** that acts as the single source of truth for organizational presence, time-off ledgers, and payroll computation.
+**Shiftly** was engineered to solve the data fragmentation problem inherent in small-to-medium enterprise (SME) HR operations. By moving away from disconnected spreadsheets and legacy cloud suites, Shiftly offers a **unified, transparent data model** that acts as the single source of truth for organizational presence, time-off ledgers, and payroll computation.
 
-Designed as a **local-first** application, Dayflow ensures that highly-sensitive employee data remains within the organization's perimeter, requiring zero external cloud dependencies to function natively.
+Designed as a **local-first** application, Shiftly ensures that highly-sensitive employee data remains within the organization's perimeter, requiring zero external cloud dependencies to function natively.
 
 ---
 
@@ -64,7 +64,7 @@ Designed as a **local-first** application, Dayflow ensures that highly-sensitive
 
 ## 🏗️ System Architecture
 
-Dayflow employs a decoupled client-server architecture, communicating via strict RESTful endpoints secured by JSON Web Tokens (JWT).
+Shiftly employs a decoupled client-server architecture, communicating via strict RESTful endpoints secured by JSON Web Tokens (JWT).
 
 ### Request Lifecycle
 ```mermaid
@@ -112,7 +112,7 @@ sequenceDiagram
 
 ## 💻 API Structure
 
-The Dayflow backend exposes predictable REST APIs. All payloads enforce strict schema validation to guarantee data integrity before hitting the persistence layer.
+The Shiftly backend exposes predictable REST APIs. All payloads enforce strict schema validation to guarantee data integrity before hitting the persistence layer.
 
 **Example: Salary Structure Definition Payload**
 ```json
@@ -140,12 +140,12 @@ The Dayflow backend exposes predictable REST APIs. All payloads enforce strict s
 
 ## ⚙️ Getting Started
 
-Dayflow is container-ready. We recommend using Docker for the data tier during local development.
+Shiftly is container-ready. We recommend using Docker for the data tier during local development.
 
 ### 1. Environment Configuration
 ```bash
-git clone https://github.com/praju455/odoo-hackathon---Dayflow.git
-cd odoo-hackathon---Dayflow
+git clone https://github.com/praju455/odoo-hackathon---Shiftly.git
+cd odoo-hackathon---Shiftly
 docker-compose up -d  # Spin up PostgreSQL
 ```
 
