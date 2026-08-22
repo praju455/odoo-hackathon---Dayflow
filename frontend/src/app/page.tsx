@@ -37,17 +37,20 @@ export default function LandingPage() {
             </p>
             <div className="flex items-center gap-4">
               <Link 
-                href="/login"
+                href="/profile"
                 className="inline-flex items-center gap-2 bg-black text-white px-8 py-4 rounded-full text-lg font-semibold tracking-wide hover:scale-105 hover:shadow-2xl transition-all duration-300 active:scale-95"
               >
-                Enter Dayflow
+                Employee Dashboard
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                 </svg>
               </Link>
-              <button className="inline-flex items-center gap-2 border-2 border-black/20 text-black px-8 py-4 rounded-full text-lg font-semibold hover:border-black/40 hover:bg-black/5 transition-all duration-300 active:scale-95">
-                View Demo
-              </button>
+              <Link 
+                href="/admin/employees"
+                className="inline-flex items-center gap-2 border-2 border-black/20 text-black px-8 py-4 rounded-full text-lg font-semibold hover:border-black/40 hover:bg-black/5 transition-all duration-300 active:scale-95"
+              >
+                HR / Admin Dashboard
+              </Link>
             </div>
           </div>
           

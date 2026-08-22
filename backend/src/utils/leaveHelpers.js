@@ -25,7 +25,6 @@ async function seedDefaultLeaveAllocations(
 
   await client.leaveAllocation.createMany({
     data: allocations,
-    skipDuplicates: true, // Prevent errors if allocations already exist for this year
   });
 }
 

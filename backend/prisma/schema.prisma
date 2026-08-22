@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -18,44 +18,21 @@ datasource db {
 // Enums
 // ─────────────────────────────────────────
 
-enum Role {
-  ADMIN
-  EMPLOYEE
-}
+
 
 // Member 2 extended: added LEAVE to track leave days in attendance
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  HALF_DAY
-  LEAVE
-}
+
 
 // Member 2 enum for leave request lifecycle
-enum LeaveRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
 
-enum LeaveType {
-  PAID
-  SICK
-  UNPAID
-}
+
+
 
 // Member 2 enum for wage period
-enum WageType {
-  MONTHLY
-  YEARLY
-}
+
 
 // Member 2 enum for salary component calculation type
-enum ComponentType {
-  FIXED // calculatedAmount = value (raw rupee amount)
-  PERCENT_OF_WAGE // calculatedAmount = value% of fixedWage
-  PERCENT_OF_BASIC // calculatedAmount = value% of Basic component's calculatedAmount
-}
+
 
 // ─────────────────────────────────────────
 // Member 1 models (Company, User)
@@ -88,16 +65,16 @@ model User {
   homeAddress        String?
   passwordHash       String
   mustChangePassword Boolean   @default(false)
-  role               Role      @default(EMPLOYEE)
+  role String @default("EMPLOYEE")
   department         String?
   jobTitle           String?
   managerId          String?
   profilePictureUrl  String?
   joiningDate        DateTime
   about              String?
-  skills             String[]  @default([])
-  certifications     String[]  @default([])
-  interests          String[]  @default([])
+  skills String @default("")
+  certifications String @default("")
+  interests String @default("")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -128,12 +105,12 @@ model User {
 model Attendance {
   id         String           @id @default(uuid())
   userId     String
-  date       DateTime         @db.Date // store only the calendar date
+  date       DateTime         // store only the calendar date
   checkIn    DateTime? // full timestamp set on check-in
   checkOut   DateTime? // full timestamp set on check-out
   workHours  Float? // decimal hours: (checkOut - checkIn)
   extraHours Float? // hours beyond standard 8-hour day
-  status     AttendanceStatus @default(ABSENT)
+  status String @default("ABSENT")
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -154,7 +131,7 @@ model Attendance {
 model LeaveAllocation {
   id        String    @id @default(uuid())
   userId    String
-  leaveType LeaveType
+  leaveType String
   totalDays Int // annual entitlement
   usedDays  Int       @default(0)
   year      Int // e.g. 2026
@@ -178,13 +155,13 @@ model LeaveAllocation {
 model LeaveRequest {
   id             String             @id @default(uuid())
   userId         String
-  leaveType      LeaveType
-  startDate      DateTime           @db.Date
-  endDate        DateTime           @db.Date
+  leaveType String
+  startDate      DateTime
+  endDate        DateTime
   allocationDays Int // (endDate - startDate) + 1, computed on create
   reason         String? // optional employee remarks
   attachmentUrl  String? // filename/path only; soft-required for SICK leave
-  status         LeaveRequestStatus @default(PENDING)
+  status String @default("PENDING")
   adminComment   String? // set by admin on approve/reject
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
@@ -204,7 +181,7 @@ model LeaveRequest {
 model SalaryStructure {
   id                String            @id @default(uuid())
   userId            String            @unique // one structure per employee
-  wageType          WageType          @default(MONTHLY)
+  wageType String @default("MONTHLY")
   fixedWage         Float // gross wage (monthly or yearly)
   pfEmployeePercent Float             @default(12) // % of Basic deducted from employee
   pfEmployerPercent Float             @default(12) // % of Basic contributed by employer
@@ -230,7 +207,7 @@ model SalaryComponent {
   id                String        @id @default(uuid())
   salaryStructureId String
   name              String // e.g. "Basic", "HRA", "Performance Bonus"
-  compType          ComponentType
+  compType String
   value             Float // raw amount (FIXED) or percentage number (PERCENT_*)
   calculatedAmount  Float         @default(0) // always recomputed on save; never set manually
   createdAt         DateTime      @default(now())
