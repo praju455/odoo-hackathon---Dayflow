@@ -30,15 +30,18 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.use("/api/setup", require("./routes/setup"));
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/employees", require("./routes/employees"));
-app.use("/api/users", require("./routes/users"));
-app.use("/api/attendance", require("./routes/attendance"));
-app.use("/api/leave", require("./routes/leave"));
-app.use("/api/salary", require("./routes/salary"));
-app.use("/api/analytics", require("./routes/analytics"));
+app.use("/api/setup",         require("./routes/setup"));
+app.use("/api/auth",          require("./routes/auth"));
+app.use("/api/employees",     require("./routes/employees"));
+app.use("/api/users",         require("./routes/users"));
+app.use("/api/attendance",    require("./routes/attendance"));
+app.use("/api/leave",         require("./routes/leave"));
+app.use("/api/salary",        require("./routes/salary"));
+app.use("/api/analytics",     require("./routes/analytics"));
 app.use("/api/notifications", require("./routes/notifications"));
+
+// ── AI Chat — Gemini primary, Groq fallback ───────────────────────────────────
+app.use("/api/chat",          require("./routes/chat"));
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Route not found" });

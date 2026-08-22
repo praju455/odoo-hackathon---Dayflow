@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Avatar from "@/components/ui/Avatar";
+import ChatWidget from "@/components/employee/ChatWidget";
 
 const menuItems = [
   { label: "Dashboard", href: "/admin/analytics", icon: "grid" },
@@ -202,6 +203,9 @@ export default function AdminLayout({
           <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
         </section>
       </div>
+
+      {/* AI chat floats over all admin pages */}
+      <ChatWidget offsetRight="1.5rem" />
     </div>
   );
 }

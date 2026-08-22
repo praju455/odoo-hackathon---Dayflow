@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Avatar from "@/components/ui/Avatar";
 import CheckInWidget from "@/components/employee/CheckInWidget";
+import ChatWidget from "@/components/employee/ChatWidget";
 import { AttendanceStatusProvider, useAttendanceStatus } from "@/context/AttendanceStatusContext";
 
 const menuItems = [
@@ -202,6 +203,8 @@ function EmployeeShell({ children }: { children: React.ReactNode }) {
         </section>
       </div>
       <CheckInWidget />
+      {/* AI chat bubble — floats bottom-right, left of CheckInWidget */}
+      <ChatWidget />
     </div>
   );
 }
