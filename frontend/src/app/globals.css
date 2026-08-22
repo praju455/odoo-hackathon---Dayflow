@@ -2,18 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design tokens (shared with Member 3) ─────────────────────────────────── */
 :root {
+<<<<<<< HEAD
   --background: #0f172a; /* Tailwind slate-900 */
   --foreground: #f8fafc; /* Tailwind slate-50 */
+=======
+  /* Brand */
+  --color-primary: #4f46e5;       /* indigo-600 */
+  --color-primary-hover: #4338ca; /* indigo-700 */
+  --color-primary-light: #eef2ff; /* indigo-50  */
+
+  /* Status badges */
+  --color-present: #22c55e;  /* green-500  */
+  --color-absent:  #eab308;  /* yellow-500 */
+  --color-leave:   #6366f1;  /* indigo-400 */
+
+  /* Surface */
+  --color-bg: #f9fafb;       /* gray-50  */
+  --color-card: #ffffff;
+  --color-border: #e5e7eb;   /* gray-200 */
+
+  /* Text */
+  --color-text-primary: #111827;   /* gray-900 */
+  --color-text-secondary: #6b7280; /* gray-500 */
+  --color-text-muted: #9ca3af;     /* gray-400 */
+>>>>>>> 36018d7dffbeb7822d439059207690d3548a9668
 }
 
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
 body {
+<<<<<<< HEAD
   color: var(--foreground);
   background: var(--background);
+=======
+  font-family: var(--font-inter), system-ui, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+>>>>>>> 36018d7dffbeb7822d439059207690d3548a9668
 }
 
+/* ─── Utilities ─────────────────────────────────────────────────────────────── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Card shadow consistent across the app */
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg
+           px-4 py-2 text-sm transition-colors duration-150 disabled:opacity-50
+           disabled:cursor-not-allowed;
+  }
+
+  /* Ghost / secondary button */
+  .btn-ghost {
+    @apply bg-transparent hover:bg-gray-100 text-gray-700 font-medium rounded-lg
+           px-4 py-2 text-sm transition-colors duration-150 border border-gray-200;
   }
 }
