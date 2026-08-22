@@ -1,4 +1,4 @@
-// Shared TypeScript types for the Dayflow frontend.
+// Shared TypeScript types for the Shiftly frontend.
 // Used by both Member 3 (profile/attendance) and Member 4 (directory/admin).
 
 // ─── Auth ────────────────────────────────────────────────────────────────────

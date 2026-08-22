@@ -160,7 +160,7 @@ export default function NavShell() {
             </svg>
           </div>
           <span className="text-white font-semibold text-lg tracking-tight select-none">
-            Dayflow
+            Shiftly
           </span>
         </div>
 

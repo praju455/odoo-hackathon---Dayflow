@@ -45,10 +45,10 @@ function StatCard({
 }) {
   return (
     <section
-      className={`min-h-44 rounded-3xl p-6 shadow-sm ${
+      className={`min-h-44 rounded-3xl p-6 shadow-2xl ${
         featured
           ? "bg-gradient-to-br from-[#064423] via-[#0c693b] to-[#198954] text-white"
-          : "bg-white text-[#111814]"
+          : "bg-[#050505] text-[#111814]"
       }`}
     >
       <p className={`text-sm font-bold ${featured ? "text-white" : "text-[#111814]"}`}>{label}</p>
@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="grid min-h-[60vh] place-items-center rounded-3xl bg-white text-sm font-semibold text-[#7d847c]">
+      <div className="grid min-h-[60vh] place-items-center rounded-3xl bg-[#050505] text-sm font-semibold text-[#7d847c]">
         Loading dashboard...
       </div>
     );
@@ -159,13 +159,13 @@ export default function AnalyticsPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/employees/new"
-            className="rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#0b633c]"
+            className="rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-2xl transition hover:bg-[#0b633c]"
           >
             + Add Employee
           </Link>
           <Link
             href="/employees"
-            className="rounded-full border border-[#133f2a] bg-white px-6 py-3 text-sm font-bold text-[#133f2a] transition hover:bg-[#eef0ec]"
+            className="rounded-full border border-[#133f2a] bg-[#050505] px-6 py-3 text-sm font-bold text-[#133f2a] transition hover:bg-[#eef0ec]"
           >
             View Directory
           </Link>
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-bold text-[#111814]">Headcount By Department</h2>
@@ -221,7 +221,7 @@ export default function AnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
           <h2 className="text-xl font-bold text-[#111814]">Attendance Mix</h2>
           <p className="mt-1 text-sm text-[#7b837a]">Today’s status split from attendance records.</p>
           <div className="mt-6 space-y-5">
@@ -251,7 +251,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr_1fr]">
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
           <h2 className="text-xl font-bold text-[#111814]">Leave Requests</h2>
           <p className="mt-1 text-sm text-[#7b837a]">Current request status distribution.</p>
           <div className="mt-6 h-64">
@@ -296,7 +296,7 @@ export default function AnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-6 shadow-2xl">
           <h2 className="text-xl font-bold text-[#111814]">Admin Actions</h2>
           <p className="mt-1 text-sm text-[#7b837a]">Useful places to continue real workflows.</p>
           <div className="mt-6 space-y-3">
@@ -321,7 +321,7 @@ export default function AnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-[#063a23] p-6 text-white shadow-sm">
+        <section className="rounded-3xl bg-[#063a23] p-6 text-white shadow-2xl">
           <h2 className="text-xl font-bold">Operational Snapshot</h2>
           <p className="mt-1 text-sm text-white/65">A compact health check from today’s records.</p>
           <div className="mt-8 space-y-5">
@@ -330,8 +330,8 @@ export default function AnalyticsPage() {
                 <span>Attendance coverage</span>
                 <span>{dashboard.presentRate}%</span>
               </div>
-              <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/15">
-                <div className="h-full rounded-full bg-white" style={{ width: `${dashboard.presentRate}%` }} />
+              <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#050505]/15">
+                <div className="h-full rounded-full bg-[#050505]" style={{ width: `${dashboard.presentRate}%` }} />
               </div>
             </div>
             <div>
@@ -339,11 +339,11 @@ export default function AnalyticsPage() {
                 <span>Leave approvals</span>
                 <span>{dashboard.approvalRate}%</span>
               </div>
-              <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/15">
+              <div className="mt-2 h-3 overflow-hidden rounded-full bg-[#050505]/15">
                 <div className="h-full rounded-full bg-[#68be92]" style={{ width: `${dashboard.approvalRate}%` }} />
               </div>
             </div>
-            <p className="rounded-2xl bg-white/10 p-4 text-sm leading-relaxed text-white/78">
+            <p className="rounded-2xl bg-[#050505]/10 p-4 text-sm leading-relaxed text-white/78">
               {dashboard.pending
                 ? `${dashboard.pending} leave request${dashboard.pending === 1 ? "" : "s"} still need review.`
                 : "No pending leave reviews right now."}

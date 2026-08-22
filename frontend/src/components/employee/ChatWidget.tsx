@@ -128,7 +128,7 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
     {
       id: "welcome",
       role: "assistant",
-      text: `Hi ${user?.name?.split(" ")[0] ?? "there"} 👋 I'm Dayflow Assistant. Ask me anything about attendance, leaves, your profile, or how to use Dayflow.`,
+      text: `Hi ${user?.name?.split(" ")[0] ?? "there"} 👋 I'm Shiftly Assistant. Ask me anything about attendance, leaves, your profile, or how to use Shiftly.`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -238,7 +238,7 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
       {
         id: "welcome",
         role: "assistant",
-        text: `Hi ${user?.name?.split(" ")[0] ?? "there"} 👋 I'm Dayflow Assistant. Ask me anything about attendance, leaves, your profile, or how to use Dayflow.`,
+        text: `Hi ${user?.name?.split(" ")[0] ?? "there"} 👋 I'm Shiftly Assistant. Ask me anything about attendance, leaves, your profile, or how to use Shiftly.`,
       },
     ]);
   }
@@ -259,7 +259,7 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
           "
           style={{ maxHeight: "min(520px, calc(100vh - 120px))" }}
           role="dialog"
-          aria-label="Dayflow AI Assistant"
+          aria-label="Shiftly AI Assistant"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50 bg-slate-800/80 shrink-0">
@@ -277,7 +277,7 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
                 </svg>
               </div>
               <div>
-                <p className="text-white text-sm font-semibold leading-tight">Dayflow Assistant</p>
+                <p className="text-white text-sm font-semibold leading-tight">Shiftly Assistant</p>
                 <p className="text-slate-500 text-[10px] leading-tight">
                   Powered by Gemini · Groq fallback
                 </p>
@@ -376,7 +376,7 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask anything about Dayflow…"
+                placeholder="Ask anything about Shiftly…"
                 rows={1}
                 disabled={isTyping}
                 aria-label="Chat message input"
@@ -418,7 +418,7 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
                 )}
               </button>
             </form>
-            <p className="text-slate-600 text-[10px] mt-1.5 text-center">
+            <p className="text-gray-400 text-[10px] mt-1.5 text-center">
               Enter to send · Shift+Enter for new line
             </p>
           </div>

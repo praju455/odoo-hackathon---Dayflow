@@ -82,17 +82,17 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-3xl p-5 shadow-sm ${
+      className={`rounded-3xl p-5 shadow-2xl ${
         featured
           ? "bg-gradient-to-br from-[#064423] via-[#0c693b] to-[#198954] text-white"
-          : "bg-white text-[#111814]"
+          : "bg-[#050505] text-[#111814]"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm font-bold">{label}</p>
         <span
           className={`grid h-9 w-9 place-items-center rounded-full border text-sm ${
-            featured ? "border-white/30 bg-white text-[#0b4f2d]" : "border-[#dfe3dd] bg-white text-[#111814]"
+            featured ? "border-white/30 bg-[#050505] text-[#0b4f2d]" : "border-[#dfe3dd] bg-[#050505] text-[#111814]"
           }`}
         >
           ↗
@@ -191,7 +191,7 @@ export default function AttendancePage() {
           </p>
         </div>
 
-        <div className="flex items-center rounded-full border border-[#dfe3dd] bg-white p-1 shadow-sm">
+        <div className="flex items-center rounded-full border border-[#dfe3dd] bg-[#050505] p-1 shadow-2xl">
           <button
             type="button"
             onClick={prevMonth}
@@ -229,7 +229,7 @@ export default function AttendancePage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr_0.68fr]">
-        <section className="rounded-3xl bg-white p-5 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-5 shadow-2xl">
           <h2 className="text-base font-bold text-[#111814]">Weekly Activity</h2>
           <div className="mt-5 flex h-44 items-end justify-between gap-3">
             {miniBars.map((item, index) => {
@@ -254,7 +254,7 @@ export default function AttendancePage() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-5 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-5 shadow-2xl">
           <h2 className="text-base font-bold text-[#111814]">Today</h2>
           <div className="mt-5">
             <p className="text-2xl font-bold leading-tight tracking-[-0.04em] text-[#102016]">
@@ -272,7 +272,7 @@ export default function AttendancePage() {
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-5 shadow-sm">
+        <section className="rounded-3xl bg-[#050505] p-5 shadow-2xl">
           <h2 className="text-base font-bold text-[#111814]">Month Mix</h2>
           <div className="mt-5 space-y-4">
             {[
@@ -298,7 +298,7 @@ export default function AttendancePage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_0.68fr]">
-        <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl bg-[#050505] shadow-2xl">
           <div className="flex items-center justify-between border-b border-[#edf0eb] px-5 py-4">
             <h2 className="text-base font-bold text-[#111814]">Attendance Log</h2>
             <span className="text-xs font-semibold text-[#8b9188]">
@@ -355,19 +355,19 @@ export default function AttendancePage() {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-[#063a23] p-5 text-white shadow-sm">
+        <section className="overflow-hidden rounded-3xl bg-[#063a23] p-5 text-white shadow-2xl">
           <h2 className="text-base font-bold">Attendance Progress</h2>
           <div className="mt-8 rounded-[28px] bg-[radial-gradient(circle_at_top_right,#0f7a4b,transparent_45%),linear-gradient(135deg,#062417,#0d5d35)] p-6 text-center shadow-inner">
             <p className="text-6xl font-bold tracking-[-0.06em]">{summary.progress}%</p>
             <p className="mt-2 text-sm text-white/65">Presence ratio this month</p>
-            <div className="mt-8 h-2 overflow-hidden rounded-full bg-white/15">
-              <div className="h-full rounded-full bg-white" style={{ width: `${summary.progress}%` }} />
+            <div className="mt-8 h-2 overflow-hidden rounded-full bg-[#050505]/15">
+              <div className="h-full rounded-full bg-[#050505]" style={{ width: `${summary.progress}%` }} />
             </div>
           </div>
         </section>
       </div>
 
-      <section className="rounded-3xl bg-white p-5 shadow-sm">
+      <section className="rounded-3xl bg-[#050505] p-5 shadow-2xl">
         <h2 className="text-base font-bold text-[#111814]">Quick Actions</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
@@ -379,9 +379,9 @@ export default function AttendancePage() {
             <Link
               key={title}
               href={href}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-200 hover:bg-emerald-50"
+              className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 transition hover:border-emerald-200 hover:bg-emerald-50"
             >
-              <p className="text-sm font-bold text-slate-950">{title}</p>
+              <p className="text-sm font-bold text-white">{title}</p>
               <p className="mt-2 text-xs leading-5 text-slate-500">{body}</p>
             </Link>
           ))}

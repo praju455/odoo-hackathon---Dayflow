@@ -95,8 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                   active
-                    ? "bg-white text-[#0f7a4b] shadow-sm"
-                    : "text-[#8b938a] hover:bg-white/75 hover:text-[#1f2a24]"
+                    ? "bg-[#050505] text-[#0f7a4b] shadow-2xl"
+                    : "text-[#8b938a] hover:bg-[#050505]/75 hover:text-[#1f2a24]"
                 }`}
               >
                 {active && <span className="absolute -left-6 h-11 w-1.5 rounded-r-full bg-[#14844f]" />}
@@ -111,14 +111,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="space-y-2">
           <Link
             href="/profile"
-            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-[#8b938a] hover:bg-white/75 hover:text-[#1f2a24]"
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-[#8b938a] hover:bg-[#050505]/75 hover:text-[#1f2a24]"
           >
             <Icon name="team" />
             Profile
           </Link>
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-[#8b938a] hover:bg-white/75 hover:text-[#1f2a24]"
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-[#8b938a] hover:bg-[#050505]/75 hover:text-[#1f2a24]"
           >
             <Icon name="calendar" />
             Logout
@@ -141,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
-                    active ? "bg-[#137d4c] text-white" : "bg-white text-[#7d847c]"
+                    active ? "bg-[#137d4c] text-white" : "bg-[#050505] text-[#7d847c]"
                   }`}
                 >
                   {item.label}
@@ -150,7 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          <Link href="/profile" className="ml-auto flex min-w-0 items-center gap-3 rounded-2xl bg-white py-1.5 pl-2 pr-4 shadow-sm">
+          <Link href="/profile" className="ml-auto flex min-w-0 items-center gap-3 rounded-2xl bg-[#050505] py-1.5 pl-2 pr-4 shadow-2xl">
             <Avatar name={user.name} src={user.profilePictureUrl} size="sm" />
             <span className="hidden min-w-0 sm:block">
               <span className="block max-w-[180px] truncate text-sm font-bold text-[#111814]">{user.name}</span>

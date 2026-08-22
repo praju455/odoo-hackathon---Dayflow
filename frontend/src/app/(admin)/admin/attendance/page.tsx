@@ -96,7 +96,7 @@ export default function AdminAttendancePage() {
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
+          <h1 className="text-2xl font-bold text-white">Attendance</h1>
           <p className="text-sm text-gray-500 mt-1">Review team check-ins and working hours.</p>
         </div>
 
@@ -113,12 +113,12 @@ export default function AdminAttendancePage() {
               placeholder="Search employees..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500 outline-none"
             />
           </div>
 
           {/* Date Navigation */}
-          <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1">
+          <div className="flex items-center rounded-lg border border-white/10 bg-[#050505] p-1">
             <button 
               onClick={() => setDate(addDays(date, -1))}
               className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-md"
@@ -130,7 +130,7 @@ export default function AdminAttendancePage() {
             
             <button 
               onClick={() => setShowDayOfWeek(!showDayOfWeek)}
-              className="px-3 py-1 text-sm font-medium text-gray-700 min-w-[120px] text-center hover:bg-gray-50 rounded-md"
+              className="px-3 py-1 text-sm font-medium text-gray-700 min-w-[120px] text-center hover:bg-[#0a0a0a] rounded-md"
               title="Click to toggle date format"
             >
               {formatDisplayDate(date, showDayOfWeek)}
@@ -157,7 +157,7 @@ export default function AdminAttendancePage() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50/50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-100">
+            <thead className="bg-[#0a0a0a]/50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4 font-medium">Employee</th>
                 <th className="px-6 py-4 font-medium">Status</th>
@@ -183,11 +183,11 @@ export default function AdminAttendancePage() {
                   const status = dayRecord?.status ?? "ABSENT";
                   
                   return (
-                    <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={emp.id} className="hover:bg-[#0a0a0a]/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar name={emp.name} src={emp.profilePictureUrl} size="sm" />
-                          <div className="font-medium text-gray-900">{emp.name}</div>
+                          <div className="font-medium text-white">{emp.name}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -211,7 +211,7 @@ export default function AdminAttendancePage() {
                       </td>
                       <td className="px-6 py-4 font-mono text-gray-700">{formatTime(record?.checkIn)}</td>
                       <td className="px-6 py-4 font-mono text-gray-700">{formatTime(record?.checkOut)}</td>
-                      <td className="px-6 py-4 font-medium text-gray-900">{formatHours(record?.workHours)}</td>
+                      <td className="px-6 py-4 font-medium text-white">{formatHours(record?.workHours)}</td>
                       <td className="px-6 py-4 text-orange-600">{formatHours(record?.extraHours)}</td>
                     </tr>
                   );

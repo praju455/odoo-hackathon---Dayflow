@@ -78,21 +78,21 @@ export default function AddEmployeeForm() {
           </svg>
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Employee Created</h2>
+          <h2 className="text-xl font-bold text-white">Employee Created</h2>
           <p className="text-sm text-gray-500 mt-2">
             Share these credentials with {successData.name}.<br/>
             They will only be shown this one time.
           </p>
         </div>
         
-        <div className="bg-gray-50 rounded-lg p-4 text-left border border-gray-200">
+        <div className="bg-[#0a0a0a] rounded-lg p-4 text-left border border-white/10">
           <div className="mb-3">
             <span className="text-xs font-semibold text-gray-500 uppercase">Login ID</span>
-            <div className="font-mono text-gray-900 font-medium">{successData.loginId}</div>
+            <div className="font-mono text-white font-medium">{successData.loginId}</div>
           </div>
           <div>
             <span className="text-xs font-semibold text-gray-500 uppercase">Temp Password</span>
-            <div className="font-mono text-gray-900 font-medium">{successData.tempPassword}</div>
+            <div className="font-mono text-white font-medium">{successData.tempPassword}</div>
           </div>
         </div>
 
@@ -110,7 +110,7 @@ export default function AddEmployeeForm() {
 
   return (
     <div className="card p-6 md:p-8 max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Add New Employee</h2>
+      <h2 className="text-xl font-bold text-white mb-6">Add New Employee</h2>
       
       {error && (
         <div className="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
@@ -152,7 +152,7 @@ export default function AddEmployeeForm() {
 
           <div className="space-y-2 md:col-span-2">
             <label htmlFor="managerId" className="block text-sm font-medium text-gray-700">Manager</label>
-            <select name="managerId" id="managerId" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white">
+            <select name="managerId" id="managerId" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-[#050505]">
               <option value="">-- None --</option>
               {employees.map(emp => (
                 <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>

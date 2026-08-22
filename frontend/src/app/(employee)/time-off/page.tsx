@@ -105,8 +105,8 @@ const LEAVE_TYPE = {
   UNPAID: {
     label: "Unpaid Leave",
     short: "Unpaid",
-    badge: "bg-slate-500/25 text-slate-400 border-slate-500/30",
-    bar:   "bg-slate-500",
+    badge: "bg-[#0a0a0a]0/25 text-slate-400 border-slate-500/30",
+    bar:   "bg-[#0a0a0a]0",
   },
 } as const;
 
@@ -379,7 +379,7 @@ function NewRequestModal({ onClose, onSuccess, allocations }: ModalProps) {
           {/* Reason */}
           <div>
             <label htmlFor="reason" className="block text-xs font-medium text-slate-400 mb-1.5">
-              Reason <span className="text-slate-600">(optional)</span>
+              Reason <span className="text-gray-400">(optional)</span>
             </label>
             <textarea
               id="reason"
@@ -397,7 +397,7 @@ function NewRequestModal({ onClose, onSuccess, allocations }: ModalProps) {
               <label className="block text-xs font-medium text-slate-400 mb-1.5">
                 Medical Certificate{" "}
                 <span className="text-red-400">*</span>{" "}
-                <span className="text-slate-600">(required for Sick leave)</span>
+                <span className="text-gray-400">(required for Sick leave)</span>
               </label>
               {/* File input: reads filename into attachmentName.
                   The backend stores attachmentUrl as a plain string — no upload endpoint.
@@ -413,7 +413,7 @@ function NewRequestModal({ onClose, onSuccess, allocations }: ModalProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                 </svg>
-                <span className={`text-sm truncate ${attachmentName ? "text-white" : "text-slate-600"}`}>
+                <span className={`text-sm truncate ${attachmentName ? "text-white" : "text-gray-400"}`}>
                   {attachmentName || "Click to attach certificate"}
                 </span>
                 {attachmentName && (
@@ -638,7 +638,7 @@ export default function TimeOffPage() {
           ) : allocations.length === 0 ? (
             <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-8 text-center">
               <p className="text-slate-500 text-sm">No allocations found for this year.</p>
-              <p className="text-slate-600 text-xs mt-1">Contact your admin to set up leave allocations.</p>
+              <p className="text-gray-400 text-xs mt-1">Contact your admin to set up leave allocations.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -695,7 +695,7 @@ export default function TimeOffPage() {
                   </svg>
                 </div>
                 <p className="text-slate-400 text-sm font-medium">No requests yet</p>
-                <p className="text-slate-600 text-xs">
+                <p className="text-gray-400 text-xs">
                   Click &quot;Request Leave&quot; to submit your first request
                 </p>
               </div>
@@ -751,12 +751,12 @@ export default function TimeOffPage() {
                     {/* Attachment indicator */}
                     {req.attachmentUrl && (
                       <div className="mt-1 flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-slate-600"
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-gray-400"
                           fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                         </svg>
-                        <span className="text-[10px] text-slate-600 truncate max-w-[200px]">
+                        <span className="text-[10px] text-gray-400 truncate max-w-[200px]">
                           {req.attachmentUrl}
                         </span>
                       </div>
@@ -769,7 +769,7 @@ export default function TimeOffPage() {
 
           {/* Footer: request count */}
           {!loadingReq && !reqError && requests.length > 0 && (
-            <p className="text-xs text-slate-600 text-right mt-3">
+            <p className="text-xs text-gray-400 text-right mt-3">
               {requests.length} request{requests.length !== 1 ? "s" : ""} total
             </p>
           )}

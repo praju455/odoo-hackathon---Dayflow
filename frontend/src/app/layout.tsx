@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Dayflow — HRMS",
-  description: "Human Resource Management System",
+  title: "Shiftly — Workforce Intelligence",
+  description: "Intelligent HRMS and workforce management platform.",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="antialiased bg-gray-50 text-gray-900">
+      <body className="antialiased bg-black text-white min-h-screen">
         <AuthProvider>
           {children}
         </AuthProvider>

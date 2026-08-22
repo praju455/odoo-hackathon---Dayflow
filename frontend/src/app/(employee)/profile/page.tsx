@@ -533,7 +533,7 @@ export default function ProfilePage() {
           <p className="text-slate-400 text-sm">
             {[profile.jobTitle, profile.department].filter(Boolean).join(" · ") || "No title set"}
           </p>
-          <p className="text-slate-600 text-xs mt-1 font-mono">{profile.loginId}</p>
+          <p className="text-gray-400 text-xs mt-1 font-mono">{profile.loginId}</p>
         </div>
       </div>
 
@@ -761,7 +761,7 @@ export default function ProfilePage() {
 
       {/* ════════ SALARY INFO TAB (ADMIN only) ════════ */}
       {activeTab === "salary" && isAdmin && (
-        <div className="rounded-2xl bg-white p-6">
+        <div className="rounded-2xl bg-[#050505] p-6">
           <SalaryEditor employeeId={profile.id} />
         </div>
       )}

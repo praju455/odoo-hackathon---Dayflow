@@ -32,7 +32,7 @@ export function generatePayslip(user: PayslipUser, breakdown: SalaryBreakdown) {
   // Header
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text("Dayflow Inc.", 105, 20, { align: "center" });
+  doc.text("Shiftly Inc.", 105, 20, { align: "center" });
   
   doc.setFontSize(14);
   doc.setFont("helvetica", "normal");

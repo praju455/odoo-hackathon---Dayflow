@@ -12,7 +12,7 @@ export default function EmployeeCard({ employee, status }: EmployeeCardProps) {
   return (
     <Link
       href={`/employees/${employee.id}`}
-      className="group block rounded-3xl border border-[#e5e9e2] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#0f7a4b]/25 hover:shadow-md"
+      className="group block rounded-3xl border border-[#e5e9e2] bg-[#050505] p-5 shadow-2xl transition hover:-translate-y-0.5 hover:border-[#0f7a4b]/25 hover:shadow-md"
       aria-label={`View ${employee.name}'s profile`}
     >
       <div className="flex items-start justify-between gap-3">

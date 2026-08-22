@@ -60,16 +60,16 @@ export default function EmployeeProfilePage() {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="flex items-center gap-5 rounded-[28px] border border-slate-200 bg-white p-6">
-          <div className="h-20 w-20 rounded-full bg-slate-200" />
+        <div className="flex items-center gap-5 rounded-[28px] border border-white/10 bg-[#050505] p-6">
+          <div className="h-20 w-20 rounded-full bg-white/10" />
           <div className="space-y-3 flex-1">
-            <div className="h-5 w-48 rounded bg-slate-200" />
-            <div className="h-4 w-32 rounded bg-slate-100" />
+            <div className="h-5 w-48 rounded bg-white/10" />
+            <div className="h-4 w-32 rounded bg-white/5" />
           </div>
         </div>
-        <div className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6">
+        <div className="space-y-4 rounded-[28px] border border-white/10 bg-[#050505] p-6">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-4 w-full rounded bg-slate-100" />
+            <div key={i} className="h-4 w-full rounded bg-white/5" />
           ))}
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function EmployeeProfilePage() {
           Employees
         </Link>
         <span>/</span>
-        <span className="font-semibold text-slate-950">{employee.name}</span>
+        <span className="font-semibold text-white">{employee.name}</span>
       </nav>
 
       <ProfileView

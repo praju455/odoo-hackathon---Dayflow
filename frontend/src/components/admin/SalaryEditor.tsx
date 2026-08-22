@@ -156,21 +156,21 @@ export default function SalaryEditor({ employeeId }: { employeeId: string }) {
 
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Earning components</h3>
-          <button type="button" onClick={() => setForm({ ...form, components: [...form.components, { name: "", compType: "FIXED", value: 0 }] })} className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Add component</button>
+          <h3 className="text-sm font-semibold text-white">Earning components</h3>
+          <button type="button" onClick={() => setForm({ ...form, components: [...form.components, { name: "", compType: "FIXED", value: 0 }] })} className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-[#0a0a0a]">Add component</button>
         </div>
         <div className="space-y-3">
           {preview.calculated.map((component, index) => (
-            <div key={index} className="grid gap-3 rounded-lg border border-gray-200 p-3 sm:grid-cols-[1.2fr_1.4fr_0.8fr_1fr_auto] sm:items-end">
+            <div key={index} className="grid gap-3 rounded-lg border border-white/10 p-3 sm:grid-cols-[1.2fr_1.4fr_0.8fr_1fr_auto] sm:items-end">
               <label className="text-xs text-gray-500">Name<input required value={component.name} onChange={(event) => updateComponent(index, { name: event.target.value })} className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm" /></label>
               <label className="text-xs text-gray-500">Calculation<select value={component.compType} onChange={(event) => updateComponent(index, { compType: event.target.value as ComponentType })} className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"><option value="FIXED">Fixed</option><option value="PERCENT_OF_WAGE">% of wage</option><option value="PERCENT_OF_BASIC">% of Basic</option></select></label>
               <label className="text-xs text-gray-500">Value<input type="number" min="0" step="0.01" required value={component.value} onChange={(event) => updateComponent(index, { value: Number(event.target.value) })} className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm" /></label>
-              <div><p className="text-xs text-gray-500">Amount</p><p className="py-2 text-sm font-semibold text-gray-900">INR {money(component.calculatedAmount)}</p></div>
+              <div><p className="text-xs text-gray-500">Amount</p><p className="py-2 text-sm font-semibold text-white">INR {money(component.calculatedAmount)}</p></div>
               <button type="button" title="Remove component" aria-label="Remove component" disabled={form.components.length === 1} onClick={() => setForm({ ...form, components: form.components.filter((_, i) => i !== index) })} className="h-9 w-9 rounded-md border border-gray-300 text-lg text-gray-500 disabled:opacity-30">×</button>
             </div>
           ))}
         </div>
-        <div className={`mt-3 flex justify-between rounded-lg px-4 py-3 text-sm font-semibold ${preview.exceedsWage ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-900"}`}><span>Component total</span><span>INR {money(preview.total)} / {money(form.fixedWage)}</span></div>
+        <div className={`mt-3 flex justify-between rounded-lg px-4 py-3 text-sm font-semibold ${preview.exceedsWage ? "bg-red-50 text-red-700" : "bg-[#0a0a0a] text-white"}`}><span>Component total</span><span>INR {money(preview.total)} / {money(form.fixedWage)}</span></div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -179,7 +179,7 @@ export default function SalaryEditor({ employeeId }: { employeeId: string }) {
         <label className="text-sm font-medium text-gray-700">Professional tax<input type="number" min="0" value={form.professionalTax} onChange={(event) => setForm({ ...form, professionalTax: Number(event.target.value) })} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2" /></label>
       </div>
 
-      {savedBreakdown && <div className="grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-4 text-sm sm:grid-cols-4"><div><p className="text-gray-500">Basic</p><p className="font-semibold">INR {money(Number(savedBreakdown.basicAmount))}</p></div><div><p className="text-gray-500">Gross</p><p className="font-semibold">INR {money(Number(savedBreakdown.grossEarnings))}</p></div><div><p className="text-gray-500">Deductions</p><p className="font-semibold">INR {money(Number(savedBreakdown.deductions.totalDeductions))}</p></div><div><p className="text-gray-500">Net</p><p className="font-semibold">INR {money(Number(savedBreakdown.netSalary))}</p></div></div>}
+      {savedBreakdown && <div className="grid grid-cols-2 gap-3 rounded-lg bg-[#0a0a0a] p-4 text-sm sm:grid-cols-4"><div><p className="text-gray-500">Basic</p><p className="font-semibold">INR {money(Number(savedBreakdown.basicAmount))}</p></div><div><p className="text-gray-500">Gross</p><p className="font-semibold">INR {money(Number(savedBreakdown.grossEarnings))}</p></div><div><p className="text-gray-500">Deductions</p><p className="font-semibold">INR {money(Number(savedBreakdown.deductions.totalDeductions))}</p></div><div><p className="text-gray-500">Net</p><p className="font-semibold">INR {money(Number(savedBreakdown.netSalary))}</p></div></div>}
 
       <div className="flex justify-end border-t border-gray-100 pt-4"><button type="submit" disabled={saving || preview.exceedsWage} className="btn-primary disabled:opacity-50">{saving ? "Saving..." : "Save salary structure"}</button></div>
     </form>

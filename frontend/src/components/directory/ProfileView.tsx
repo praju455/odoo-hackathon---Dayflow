@@ -43,11 +43,11 @@ function formatDate(iso: string | null | undefined): string {
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex flex-col gap-1 border-b border-slate-100 py-3 last:border-0 sm:flex-row sm:items-start">
+    <div className="flex flex-col gap-1 border-b border-white/5 py-3 last:border-0 sm:flex-row sm:items-start">
       <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-slate-400 sm:w-40">
         {label}
       </span>
-      <span className="text-sm font-medium text-slate-800">{value || "—"}</span>
+      <span className="text-sm font-medium text-gray-200">{value || "—"}</span>
     </div>
   );
 }
@@ -86,13 +86,13 @@ export default function ProfileView({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="rounded-[28px] border border-white/10 bg-[#050505] p-6 shadow-2xl sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <Avatar name={employee.name} src={employee.profilePictureUrl} size="xl" />
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950">{employee.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white">{employee.name}</h1>
             {employee.role === "ADMIN" && (
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
                 Admin
@@ -123,7 +123,7 @@ export default function ProfileView({
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="rounded-3xl border border-white/10 bg-[#050505] p-2 shadow-2xl">
         <nav className="flex gap-2" aria-label="Profile tabs">
           {tabs.map((tab) => (
             <button
@@ -133,7 +133,7 @@ export default function ProfileView({
               className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                 activeTab === tab.id
                   ? "bg-emerald-700 text-white"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  : "text-slate-500 hover:bg-white/5 hover:text-white"
               }`}
               aria-selected={activeTab === tab.id}
               role="tab"
@@ -146,7 +146,7 @@ export default function ProfileView({
 
       {/* ── Tab panels ───────────────────────────────────────────────── */}
       {activeTab === "profile" && (
-        <div className="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8" role="tabpanel" aria-labelledby="tab-profile">
+        <div className="space-y-6 rounded-[28px] border border-white/10 bg-[#050505] p-6 shadow-2xl sm:p-8" role="tabpanel" aria-labelledby="tab-profile">
           {/* Personal & contact */}
           <section>
             <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -173,7 +173,7 @@ export default function ProfileView({
               <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                 About
               </h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
                 {employee.about}
               </p>
             </section>
@@ -203,8 +203,8 @@ export default function ProfileView({
       )}
 
       {activeTab === "salary" && isAdmin && (
-        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8" role="tabpanel" aria-labelledby="tab-salary">
-          <h2 className="mb-6 text-base font-bold text-slate-950">Update Salary Information</h2>
+        <div className="rounded-[28px] border border-white/10 bg-[#050505] p-6 shadow-2xl sm:p-8" role="tabpanel" aria-labelledby="tab-salary">
+          <h2 className="mb-6 text-base font-bold text-white">Update Salary Information</h2>
           <SalaryEditor employeeId={employee.id} />
         </div>
       )}

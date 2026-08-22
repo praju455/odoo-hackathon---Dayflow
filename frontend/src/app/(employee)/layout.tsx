@@ -77,7 +77,7 @@ function StatusPill() {
           : "bg-[#a6ada5]";
 
   return (
-    <div className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#6f776e] shadow-sm sm:flex">
+    <div className="hidden items-center gap-2 rounded-full bg-[#050505] px-4 py-2 text-sm font-semibold text-[#6f776e] shadow-2xl sm:flex">
       <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
       {label}
     </div>
@@ -114,8 +114,8 @@ function EmployeeShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                   active
-                    ? "bg-white text-[#0f7a4b] shadow-sm"
-                    : "text-[#8b938a] hover:bg-white/75 hover:text-[#1f2a24]"
+                    ? "bg-[#050505] text-[#0f7a4b] shadow-2xl"
+                    : "text-[#8b938a] hover:bg-[#050505]/75 hover:text-[#1f2a24]"
                 }`}
               >
                 {active && <span className="absolute -left-6 h-11 w-1.5 rounded-r-full bg-[#14844f]" />}
@@ -129,7 +129,7 @@ function EmployeeShell({ children }: { children: React.ReactNode }) {
         <p className="mb-4 mt-12 text-xs font-semibold uppercase tracking-[0.16em] text-[#9a9f99]">General</p>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-[#8b938a] hover:bg-white/75 hover:text-[#1f2a24]"
+          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-[#8b938a] hover:bg-[#050505]/75 hover:text-[#1f2a24]"
         >
           <Icon name="calendar" />
           Logout
@@ -151,7 +151,7 @@ function EmployeeShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
-                    active ? "bg-[#137d4c] text-white" : "bg-white text-[#7d847c]"
+                    active ? "bg-[#137d4c] text-white" : "bg-[#050505] text-[#7d847c]"
                   }`}
                 >
                   {item.label}
@@ -162,7 +162,7 @@ function EmployeeShell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-3">
             <StatusPill />
-            <Link href="/profile" className="flex min-w-0 items-center gap-3 rounded-2xl bg-white py-1.5 pl-2 pr-4 shadow-sm">
+            <Link href="/profile" className="flex min-w-0 items-center gap-3 rounded-2xl bg-[#050505] py-1.5 pl-2 pr-4 shadow-2xl">
               {user && <Avatar name={user.name} src={user.profilePictureUrl} size="sm" />}
               <span className="hidden min-w-0 sm:block">
                 <span className="block max-w-[180px] truncate text-sm font-bold text-[#111814]">{user?.name}</span>

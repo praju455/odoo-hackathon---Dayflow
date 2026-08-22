@@ -105,14 +105,14 @@ export default function EmployeesPage() {
         {isAdmin && (
           <Link
             href="/admin/employees/new"
-            className="inline-flex items-center justify-center rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#0b633c]"
+            className="inline-flex items-center justify-center rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-2xl transition hover:bg-[#0b633c]"
           >
             + Add Employee
           </Link>
         )}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-3xl border border-[#e5e9e2] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-3xl border border-[#e5e9e2] bg-[#050505] p-5 shadow-2xl sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-bold text-[#111814]">
             {employees.length > 0
@@ -134,7 +134,7 @@ export default function EmployeesPage() {
             placeholder="Search by name or department..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-12 w-full rounded-2xl border border-[#dfe4dd] bg-[#fafbf8] pl-11 pr-4 text-sm text-[#111814] outline-none transition placeholder:text-[#9aa199] focus:border-[#14844f] focus:bg-white"
+            className="h-12 w-full rounded-2xl border border-[#dfe4dd] bg-[#fafbf8] pl-11 pr-4 text-sm text-[#111814] outline-none transition placeholder:text-[#9aa199] focus:border-[#14844f] focus:bg-[#050505]"
           />
         </div>
       </div>
@@ -144,9 +144,9 @@ export default function EmployeesPage() {
           {[
             ["Present", dayRecords.filter((record) => record.status === "PRESENT" || record.status === "HALF_DAY").length, "bg-emerald-50 text-emerald-700"],
             ["On Leave", dayRecords.filter((record) => record.status === "LEAVE").length, "bg-amber-50 text-amber-700"],
-            ["Absent", Math.max(0, employees.length - dayRecords.length), "bg-slate-100 text-slate-700"],
+            ["Absent", Math.max(0, employees.length - dayRecords.length), "bg-white/5 text-gray-300"],
           ].map(([label, value, cls]) => (
-            <div key={label} className="rounded-3xl border border-[#e5e9e2] bg-white p-5 shadow-sm">
+            <div key={label} className="rounded-3xl border border-[#e5e9e2] bg-[#050505] p-5 shadow-2xl">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b837a]">{label}</p>
               <p className={`mt-4 inline-flex rounded-2xl px-4 py-2 text-3xl font-bold ${cls}`}>
                 {value}
@@ -159,7 +159,7 @@ export default function EmployeesPage() {
       {loading && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-48 animate-pulse rounded-3xl border border-[#e5e9e2] bg-white" />
+            <div key={i} className="h-48 animate-pulse rounded-3xl border border-[#e5e9e2] bg-[#050505]" />
           ))}
         </div>
       )}
@@ -172,7 +172,7 @@ export default function EmployeesPage() {
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <div className="rounded-3xl border border-dashed border-[#dfe4dd] bg-white p-16 text-center">
+        <div className="rounded-3xl border border-dashed border-[#dfe4dd] bg-[#050505] p-16 text-center">
           <p className="font-semibold text-[#111814]">No employees found</p>
           {search && <p className="mt-1 text-sm text-[#7b837a]">Try a different search term.</p>}
         </div>
