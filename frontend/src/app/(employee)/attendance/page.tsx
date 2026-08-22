@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
@@ -265,9 +266,9 @@ export default function AttendancePage() {
             <p className="mt-1 text-sm text-[#8b9188]">
               Check out: {fmtTime(summary.latest?.checkOut ?? null)}
             </p>
-            <button className="mt-7 w-full rounded-full bg-[#0f7a4b] px-5 py-3 text-sm font-bold text-white">
-              Use Check-in Widget
-            </button>
+            <p className="mt-7 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-800">
+              Use the floating button at the bottom-right to check in or check out.
+            </p>
           </div>
         </section>
 
@@ -365,6 +366,27 @@ export default function AttendancePage() {
           </div>
         </section>
       </div>
+
+      <section className="rounded-3xl bg-white p-5 shadow-sm">
+        <h2 className="text-base font-bold text-[#111814]">Quick Actions</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Request leave", "Apply for paid, sick, or unpaid leave.", "/time-off"],
+            ["Update profile", "Keep your private and resume details current.", "/profile"],
+            ["View directory", "Find teammates and department details.", "/employees"],
+            ["Review attendance", "Check your monthly work log.", "/attendance"],
+          ].map(([title, body, href]) => (
+            <Link
+              key={title}
+              href={href}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-200 hover:bg-emerald-50"
+            >
+              <p className="text-sm font-bold text-slate-950">{title}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">{body}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

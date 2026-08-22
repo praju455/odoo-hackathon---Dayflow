@@ -4,35 +4,32 @@
 
 /* ─── Design tokens (shared with Member 3) ─────────────────────────────────── */
 :root {
-  --background: #0f172a; /* Tailwind slate-900 */
-  --foreground: #f8fafc; /* Tailwind slate-50 */
-
   /* Brand */
-  --color-primary: #4f46e5;       /* indigo-600 */
-  --color-primary-hover: #4338ca; /* indigo-700 */
-  --color-primary-light: #eef2ff; /* indigo-50  */
+  --color-primary: #3b82f6;       /* blue-500 */
+  --color-primary-hover: #2563eb; /* blue-600 */
+  --color-primary-light: #60a5fa; /* blue-400  */
 
   /* Status badges */
-  --color-present: #22c55e;  /* green-500  */
-  --color-absent:  #eab308;  /* yellow-500 */
-  --color-leave:   #6366f1;  /* indigo-400 */
+  --color-present: #10b981;  /* emerald-500  */
+  --color-absent:  #ef4444;  /* red-500 */
+  --color-leave:   #8b5cf6;  /* violet-500 */
 
   /* Surface */
-  --color-bg: #f9fafb;       /* gray-50  */
-  --color-card: #ffffff;
-  --color-border: #e5e7eb;   /* gray-200 */
+  --color-bg: #050505;       /* nearly black */
+  --color-card: #0a0a0a;     /* slightly lighter */
+  --color-border: rgba(255, 255, 255, 0.1);
 
   /* Text */
-  --color-text-primary: #111827;   /* gray-900 */
-  --color-text-secondary: #6b7280; /* gray-500 */
-  --color-text-muted: #9ca3af;     /* gray-400 */
+  --color-text-primary: #ffffff;   /* white */
+  --color-text-secondary: #9ca3af; /* gray-400 */
+  --color-text-muted: #6b7280;     /* gray-500 */
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
 body {
   font-family: var(--font-inter), system-ui, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
+  background-color: #f5f6f3;
+  color: #0f172a;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -44,19 +41,33 @@ body {
 
   /* Card shadow consistent across the app */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+    @apply bg-void-charcoal rounded-2xl shadow-xl border border-white/5 backdrop-blur-sm relative overflow-hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
   }
 
   /* Primary button */
   .btn-primary {
-    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg
-           px-4 py-2 text-sm transition-colors duration-150 disabled:opacity-50
-           disabled:cursor-not-allowed;
+    @apply bg-white hover:bg-gray-200 text-black font-semibold rounded-full
+           px-6 py-2.5 text-sm transition-all duration-300 disabled:opacity-50
+           disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)];
   }
 
   /* Ghost / secondary button */
   .btn-ghost {
-    @apply bg-transparent hover:bg-gray-100 text-gray-700 font-medium rounded-lg
-           px-4 py-2 text-sm transition-colors duration-150 border border-gray-200;
+    @apply bg-transparent hover:bg-white/10 text-white font-medium rounded-full
+           px-6 py-2.5 text-sm transition-colors duration-150 border border-white/20;
+  }
+
+  .glass-nav {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
   }
 }

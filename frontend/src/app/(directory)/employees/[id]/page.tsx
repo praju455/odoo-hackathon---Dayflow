@@ -60,16 +60,16 @@ export default function EmployeeProfilePage() {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="card p-6 flex gap-5 items-center">
-          <div className="h-20 w-20 rounded-full bg-gray-200" />
+        <div className="flex items-center gap-5 rounded-[28px] border border-slate-200 bg-white p-6">
+          <div className="h-20 w-20 rounded-full bg-slate-200" />
           <div className="space-y-3 flex-1">
-            <div className="h-5 bg-gray-200 rounded w-48" />
-            <div className="h-4 bg-gray-100 rounded w-32" />
+            <div className="h-5 w-48 rounded bg-slate-200" />
+            <div className="h-4 w-32 rounded bg-slate-100" />
           </div>
         </div>
-        <div className="card p-6 space-y-4">
+        <div className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-4 bg-gray-100 rounded w-full" />
+            <div key={i} className="h-4 w-full rounded bg-slate-100" />
           ))}
         </div>
       </div>
@@ -79,13 +79,13 @@ export default function EmployeeProfilePage() {
   // ── Error state ───────────────────────────────────────────────────────────
   if (error || !employee) {
     return (
-      <div className="rounded-xl bg-red-50 border border-red-200 p-8 text-center space-y-3">
-        <p className="text-red-600 font-medium">{error ?? "Something went wrong."}</p>
+      <div className="space-y-3 rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
+        <p className="font-semibold text-red-700">{error ?? "Something went wrong."}</p>
         <Link
           href="/employees"
-          className="inline-block text-sm text-indigo-600 hover:underline"
+          className="inline-block text-sm font-semibold text-emerald-700 hover:underline"
         >
-          ← Back to Employees
+          Back to Employees
         </Link>
       </div>
     );
@@ -95,12 +95,12 @@ export default function EmployeeProfilePage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <nav className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/employees" className="hover:text-indigo-600 transition-colors">
+      <nav className="mb-4 flex items-center gap-2 text-sm text-slate-500">
+        <Link href="/employees" className="font-semibold transition-colors hover:text-emerald-700">
           Employees
         </Link>
         <span>/</span>
-        <span className="text-gray-900 font-medium">{employee.name}</span>
+        <span className="font-semibold text-slate-950">{employee.name}</span>
       </nav>
 
       <ProfileView

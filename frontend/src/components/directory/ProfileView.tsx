@@ -43,11 +43,11 @@ function formatDate(iso: string | null | undefined): string {
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-1 py-3 border-b border-gray-100 last:border-0">
-      <span className="text-xs font-medium text-gray-400 uppercase tracking-wide sm:w-40 shrink-0">
+    <div className="flex flex-col gap-1 border-b border-slate-100 py-3 last:border-0 sm:flex-row sm:items-start">
+      <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-slate-400 sm:w-40">
         {label}
       </span>
-      <span className="text-sm text-gray-800">{value || "—"}</span>
+      <span className="text-sm font-medium text-slate-800">{value || "—"}</span>
     </div>
   );
 }
@@ -59,7 +59,7 @@ function TagList({ items, label }: { items: string[]; label: string }) {
       {items.map((item) => (
         <span
           key={item}
-          className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
+          className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700"
         >
           {item}
         </span>
@@ -86,24 +86,24 @@ export default function ProfileView({
 
   return (
     <div className="space-y-6">
-      {/* ── Profile header card ──────────────────────────────────────── */}
-      <div className="card p-6 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+      <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <Avatar name={employee.name} src={employee.profilePictureUrl} size="xl" />
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-900">{employee.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950">{employee.name}</h1>
             {employee.role === "ADMIN" && (
-              <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600 uppercase tracking-wide">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
                 Admin
               </span>
             )}
             {status && <StatusBadge status={status} showLabel />}
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-2 text-sm font-medium text-slate-500">
             {[employee.jobTitle, employee.department].filter(Boolean).join(" · ")}
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="mt-2 text-xs text-slate-400">
             Login ID: <span className="font-mono">{employee.loginId}</span>
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function ProfileView({
         {/* Edit button — shown only when not readOnly and on profile owner's view */}
         {!readOnly && (
           <button
-            className="btn-primary shrink-0"
+            className="shrink-0 rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-800"
             onClick={() => {
               // Member 3 wires this to their edit form
               // For now it's a no-op placeholder
@@ -120,20 +120,20 @@ export default function ProfileView({
             Edit Profile
           </button>
         )}
+        </div>
       </div>
 
-      {/* ── Tabs ─────────────────────────────────────────────────────── */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-1" aria-label="Profile tabs">
+      <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+        <nav className="flex gap-2" aria-label="Profile tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               id={`tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-150 ${
+              className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                 activeTab === tab.id
-                  ? "border-indigo-600 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "bg-emerald-700 text-white"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
               }`}
               aria-selected={activeTab === tab.id}
               role="tab"
@@ -146,10 +146,10 @@ export default function ProfileView({
 
       {/* ── Tab panels ───────────────────────────────────────────────── */}
       {activeTab === "profile" && (
-        <div className="card p-6 space-y-6" role="tabpanel" aria-labelledby="tab-profile">
+        <div className="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8" role="tabpanel" aria-labelledby="tab-profile">
           {/* Personal & contact */}
           <section>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
               Personal Information
             </h2>
             <InfoRow label="Full Name" value={employee.name} />
@@ -160,7 +160,7 @@ export default function ProfileView({
 
           {/* Job info */}
           <section>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
               Job Details
             </h2>
             <InfoRow label="Department" value={employee.department} />
@@ -170,10 +170,10 @@ export default function ProfileView({
           {/* About */}
           {employee.about && (
             <section>
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                 About
               </h2>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
                 {employee.about}
               </p>
             </section>
@@ -181,20 +181,20 @@ export default function ProfileView({
 
           {/* Skills, certifications, interests */}
           <section>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
               Skills & Interests
             </h2>
             <div className="space-y-4">
               <div>
-                <p className="text-xs text-gray-500 mb-2">Skills</p>
+                <p className="mb-2 text-xs font-semibold text-slate-500">Skills</p>
                 <TagList items={employee.skills} label="Skills" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-2">Certifications</p>
+                <p className="mb-2 text-xs font-semibold text-slate-500">Certifications</p>
                 <TagList items={employee.certifications} label="Certifications" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-2">Interests</p>
+                <p className="mb-2 text-xs font-semibold text-slate-500">Interests</p>
                 <TagList items={employee.interests} label="Interests" />
               </div>
             </div>
@@ -203,8 +203,8 @@ export default function ProfileView({
       )}
 
       {activeTab === "salary" && isAdmin && (
-        <div className="card p-6" role="tabpanel" aria-labelledby="tab-salary">
-          <h2 className="text-base font-semibold text-gray-900 mb-6">Update Salary Information</h2>
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8" role="tabpanel" aria-labelledby="tab-salary">
+          <h2 className="mb-6 text-base font-bold text-slate-950">Update Salary Information</h2>
           <SalaryEditor employeeId={employee.id} />
         </div>
       )}

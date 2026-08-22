@@ -1,7 +1,3 @@
-// EmployeeCard — one card in the directory grid.
-// Shows photo/avatar, name, department/title, and a live status indicator.
-// Clicking navigates to /employees/[id].
-
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 import StatusBadge from "@/components/directory/StatusBadge";
@@ -16,40 +12,31 @@ export default function EmployeeCard({ employee, status }: EmployeeCardProps) {
   return (
     <Link
       href={`/employees/${employee.id}`}
-      className="group relative flex flex-col items-center gap-3 rounded-2xl bg-white p-5
-                 shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-100
-                 transition-all duration-200 cursor-pointer"
+      className="group block rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg"
       aria-label={`View ${employee.name}'s profile`}
     >
-      {/* Status badge — top-right corner */}
-      <span className="absolute top-3 right-3">
+      <div className="flex items-start justify-between gap-3">
+        <Avatar name={employee.name} src={employee.profilePictureUrl} size="lg" />
         <StatusBadge status={status} />
-      </span>
-
-      {/* Avatar */}
-      <div className="mt-2">
-        <Avatar
-          name={employee.name}
-          src={employee.profilePictureUrl}
-          size="lg"
-        />
       </div>
 
-      {/* Info */}
-      <div className="text-center min-w-0 w-full">
-        <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-indigo-600 transition-colors">
-          {employee.name}
-        </p>
-        {employee.department && (
-          <p className="text-xs text-gray-500 mt-0.5 truncate">
-            {employee.department}
+      <div className="mt-5 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-base font-bold text-slate-950 group-hover:text-emerald-800">
+            {employee.name}
           </p>
-        )}
-        {employee.role === "ADMIN" && (
-          <span className="mt-2 inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600 uppercase tracking-wide">
-            Admin
-          </span>
-        )}
+          {employee.role === "ADMIN" && (
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+              Admin
+            </span>
+          )}
+        </div>
+        <p className="mt-1 truncate text-sm text-slate-500">
+          {employee.jobTitle || "Team member"}
+        </p>
+        <p className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          {employee.department || "Unassigned"}
+        </p>
       </div>
     </Link>
   );
