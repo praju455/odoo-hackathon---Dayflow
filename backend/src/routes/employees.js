@@ -49,7 +49,10 @@ router.get("/", authenticate, async (req, res, next) => {
   try {
     const users = await prisma.user.findMany({
       where: { companyId: req.user.companyId },
-      orderBy: { name: "asc" },
+      include: {
+        manager: { select: { id: true, name: true } },
+      },
+      orderBy: [{ joiningDate: "desc" }, { name: "asc" }],
     });
 
     return res.json({ employees: users.map(toDirectoryUser) });

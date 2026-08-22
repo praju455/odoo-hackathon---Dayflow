@@ -2,11 +2,16 @@ function toDirectoryUser(user) {
   return {
     id: user.id,
     name: user.name,
+    email: user.email,
     profilePictureUrl: user.profilePictureUrl,
     department: user.department,
     jobTitle: user.jobTitle,
     loginId: user.loginId,
     role: user.role,
+    joiningDate: user.joiningDate,
+    manager: user.manager
+      ? { id: user.manager.id, name: user.manager.name }
+      : null,
   };
 }
 
