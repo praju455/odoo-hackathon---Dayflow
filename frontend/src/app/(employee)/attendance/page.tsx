@@ -1,23 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
-
-// ─── Types (confirmed from backend/src/routes/attendance.js) ─────────────────
-//
-// GET /api/attendance/me?month=YYYY-MM
-//   → { success: true, data: AttendanceRecord[] }
-//
-// record.date     : UTC midnight ISO string, e.g. "2025-01-15T00:00:00.000Z"
-//                   (Prisma @db.Date field serialised as a full ISO datetime)
-// record.checkIn  : full ISO datetime string or null
-// record.checkOut : full ISO datetime string or null
-// record.workHours : Float | null  (decimal hours, e.g. 7.5 = 7h 30m)
-// record.extraHours: Float | null  (hours beyond standard 8-hour day)
-// record.status   : "PRESENT" | "ABSENT" | "HALF_DAY" | "LEAVE"
-//
-// Error shape for attendance routes: { success: false, message: "..." }
-// (different from auth routes which use { error: "..." })
+import { useAuth } from "@/context/AuthContext";
 
 interface AttendanceRecord {
   id: string;
@@ -35,8 +20,6 @@ interface AttendanceResponse {
   data: AttendanceRecord[];
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function nowYM() {
   const d = new Date();
   return { year: d.getFullYear(), month: d.getMonth() + 1 };
@@ -53,81 +36,89 @@ function fmtMonthLabel(year: number, month: number) {
   });
 }
 
-/** Formats the UTC-midnight date field into a local readable string. */
 function fmtDateCell(isoDate: string) {
-  const d = new Date(isoDate);
-  return d.toLocaleDateString(undefined, {
+  return new Date(isoDate).toLocaleDateString(undefined, {
     weekday: "short",
     day: "numeric",
     month: "short",
   });
 }
 
-/** Formats a full ISO datetime to HH:MM local time. */
 function fmtTime(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } catch {
-    return "—";
+    return "-";
   }
 }
 
-/**
- * Formats decimal hours into "Xh Ym" (e.g. 7.5 → "7h 30m", 8 → "8h").
- * Returns "—" for null/undefined.
- */
 function fmtHours(h: number | null | undefined): string {
-  if (h == null) return "—";
-  const hrs  = Math.floor(h);
+  if (h == null) return "-";
+  const hrs = Math.floor(h);
   const mins = Math.round((h - hrs) * 60);
   if (mins === 0) return `${hrs}h`;
   return `${hrs}h ${mins}m`;
 }
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
+function statusClass(status: AttendanceRecord["status"]) {
+  if (status === "PRESENT") return "bg-[#e6f7ed] text-[#147a4b]";
+  if (status === "HALF_DAY") return "bg-[#fff5dc] text-[#936514]";
+  if (status === "LEAVE") return "bg-[#eef0ff] text-[#4646c8]";
+  return "bg-[#f1f2ef] text-[#7d847c]";
+}
 
-const STATUS_CONFIG: Record<
-  AttendanceRecord["status"],
-  { label: string; cls: string }
-> = {
-  PRESENT:  { label: "Present",  cls: "bg-green-500/15  text-green-400  border-green-500/25"  },
-  ABSENT:   { label: "Absent",   cls: "bg-red-500/15    text-red-400    border-red-500/25"    },
-  HALF_DAY: { label: "Half Day", cls: "bg-amber-500/15  text-amber-400  border-amber-500/25"  },
-  LEAVE:    { label: "Leave",    cls: "bg-indigo-500/15 text-indigo-400 border-indigo-500/25" },
-};
-
-function StatusBadge({ status }: { status: AttendanceRecord["status"] }) {
-  const { label, cls } = STATUS_CONFIG[status];
+function StatCard({
+  label,
+  value,
+  note,
+  featured,
+}: {
+  label: string;
+  value: string | number;
+  note: string;
+  featured?: boolean;
+}) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cls}`}>
-      {label}
-    </span>
+    <div
+      className={`rounded-3xl p-5 shadow-sm ${
+        featured
+          ? "bg-gradient-to-br from-[#064423] via-[#0c693b] to-[#198954] text-white"
+          : "bg-white text-[#111814]"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <p className="text-sm font-bold">{label}</p>
+        <span
+          className={`grid h-9 w-9 place-items-center rounded-full border text-sm ${
+            featured ? "border-white/30 bg-white text-[#0b4f2d]" : "border-[#dfe3dd] bg-white text-[#111814]"
+          }`}
+        >
+          ↗
+        </span>
+      </div>
+      <p className="mt-5 text-5xl font-bold leading-none tracking-tight">{value}</p>
+      <p className={`mt-4 text-xs ${featured ? "text-white/75" : "text-[#70786f]"}`}>{note}</p>
+    </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function AttendancePage() {
+  const { user } = useAuth();
   const now = nowYM();
-  const [year,  setYear]  = useState(now.year);
+  const [year, setYear] = useState(now.year);
   const [month, setMonth] = useState(now.month);
-
-  const [records,   setRecords]   = useState<AttendanceRecord[]>([]);
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // ── Fetch records for current year/month ──────────────────────────────────
   const fetchRecords = useCallback(async (y: number, m: number) => {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const { data } = await api.get<AttendanceResponse>(
-        `/attendance/me?month=${toMonthStr(y, m)}`
-      );
-      // Sort ascending by date in case the backend doesn't guarantee order
+      const { data } = await api.get<AttendanceResponse>(`/attendance/me?month=${toMonthStr(y, m)}`);
       const sorted = [...data.data].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
       setRecords(sorted);
     } catch {
@@ -138,235 +129,242 @@ export default function AttendancePage() {
     }
   }, []);
 
-  useEffect(() => { fetchRecords(year, month); }, [fetchRecords, year, month]);
+  useEffect(() => {
+    void fetchRecords(year, month);
+  }, [fetchRecords, year, month]);
 
-  // ── Month navigation ──────────────────────────────────────────────────────
   const isCurrentMonth = year === now.year && month === now.month;
 
   function prevMonth() {
-    if (month === 1) { setYear((y) => y - 1); setMonth(12); }
-    else             { setMonth((m) => m - 1); }
+    if (month === 1) {
+      setYear((y) => y - 1);
+      setMonth(12);
+    } else {
+      setMonth((m) => m - 1);
+    }
   }
 
   function nextMonth() {
-    if (isCurrentMonth) return; // don't navigate into the future
-    if (month === 12)   { setYear((y) => y + 1); setMonth(1); }
-    else                { setMonth((m) => m + 1); }
+    if (isCurrentMonth) return;
+    if (month === 12) {
+      setYear((y) => y + 1);
+      setMonth(1);
+    } else {
+      setMonth((m) => m + 1);
+    }
   }
 
-  // ── Summary stats ─────────────────────────────────────────────────────────
-  const presentDays  = records.filter((r) => r.status === "PRESENT" || r.status === "HALF_DAY").length;
-  const leaveDays    = records.filter((r) => r.status === "LEAVE").length;
-  const totalWorkHrs = records.reduce((sum, r) => sum + (r.workHours ?? 0), 0);
+  const summary = useMemo(() => {
+    const presentDays = records.filter((r) => r.status === "PRESENT" || r.status === "HALF_DAY").length;
+    const leaveDays = records.filter((r) => r.status === "LEAVE").length;
+    const absentDays = records.filter((r) => r.status === "ABSENT").length;
+    const totalWorkHrs = records.reduce((sum, r) => sum + (r.workHours ?? 0), 0);
+    const extraHours = records.reduce((sum, r) => sum + (r.extraHours ?? 0), 0);
+    const latest = [...records].reverse().find((r) => r.checkIn || r.checkOut || r.status !== "ABSENT");
+    const progress = records.length > 0 ? Math.round((presentDays / records.length) * 100) : 0;
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+    return { presentDays, leaveDays, absentDays, totalWorkHrs, extraHours, latest, progress };
+  }, [records]);
+
+  const miniBars = useMemo(() => {
+    const recent = records.slice(-7);
+    return recent.length ? recent : Array.from({ length: 7 }, (_, index) => ({
+      id: `empty-${index}`,
+      userId: "",
+      date: new Date(year, month - 1, index + 1).toISOString(),
+      checkIn: null,
+      checkOut: null,
+      workHours: null,
+      extraHours: null,
+      status: "ABSENT" as const,
+    }));
+  }, [month, records, year]);
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-
-      {/* ── Page header + month navigator ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Attendance</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Your personal attendance log</p>
+          <h1 className="text-4xl font-bold tracking-[-0.04em] text-[#111814]">Dashboard</h1>
+          <p className="mt-2 text-sm text-[#8b9188]">
+            Welcome back, {user?.name?.split(" ")[0] ?? "there"}. Track your workday and monthly rhythm.
+          </p>
         </div>
 
-        {/* Month navigator */}
-        <div className="flex items-center gap-1 bg-slate-800/60 border border-slate-700/40
-          rounded-xl p-1" role="group" aria-label="Month navigation">
+        <div className="flex items-center rounded-full border border-[#dfe3dd] bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={prevMonth}
+            className="grid h-10 w-10 place-items-center rounded-full text-[#7d847c] hover:bg-[#f1f3ef]"
             aria-label="Previous month"
-            className="w-9 h-9 rounded-lg flex items-center justify-center
-              text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 19l-7-7 7-7" />
-            </svg>
+            ‹
           </button>
-
-          <span className="text-white text-sm font-medium px-3 min-w-[148px] text-center select-none">
+          <span className="min-w-[150px] px-3 text-center text-sm font-bold text-[#111814]">
             {fmtMonthLabel(year, month)}
           </span>
-
           <button
             type="button"
             onClick={nextMonth}
             disabled={isCurrentMonth}
+            className="grid h-10 w-10 place-items-center rounded-full text-[#7d847c] hover:bg-[#f1f3ef] disabled:opacity-30"
             aria-label="Next month"
-            className="w-9 h-9 rounded-lg flex items-center justify-center
-              text-slate-400 hover:text-white hover:bg-slate-700
-              disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M9 5l7 7-7 7" />
-            </svg>
+            ›
           </button>
         </div>
       </div>
 
-      {/* ── Summary cards (only when records exist) ── */}
-      {!isLoading && !fetchError && records.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-5">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-              Days Present
-            </p>
-            <p className="text-3xl font-bold text-white">{presentDays}</p>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-5">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-              Leave Days
-            </p>
-            <p className="text-3xl font-bold text-white">{leaveDays}</p>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-5">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-              Total Hours
-            </p>
-            <p className="text-3xl font-bold text-white">{fmtHours(totalWorkHrs)}</p>
-          </div>
+      {fetchError && (
+        <div className="rounded-3xl border border-red-100 bg-red-50 p-5 text-sm font-semibold text-red-700">
+          {fetchError}
         </div>
       )}
 
-      {/* ── Table card ── */}
-      <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl overflow-hidden">
-
-        {/* Loading */}
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <svg className="animate-spin w-7 h-7 text-indigo-500" xmlns="http://www.w3.org/2000/svg"
-              fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-            <p className="text-slate-500 text-sm">Loading…</p>
-          </div>
-        )}
-
-        {/* Error */}
-        {!isLoading && fetchError && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 px-4">
-            <p className="text-red-400 text-sm text-center">{fetchError}</p>
-            <button
-              type="button"
-              onClick={() => fetchRecords(year, month)}
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!isLoading && !fetchError && records.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-12 h-12 rounded-xl bg-slate-700/50 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-slate-500"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25
-                     0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021
-                     18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
-              </svg>
-            </div>
-            <p className="text-slate-400 text-sm font-medium">No records found</p>
-            <p className="text-slate-600 text-xs">
-              No attendance entries for {fmtMonthLabel(year, month)}
-            </p>
-          </div>
-        )}
-
-        {/* Data table */}
-        {!isLoading && !fetchError && records.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full" role="table" aria-label="Monthly attendance records">
-              <thead>
-                <tr className="border-b border-slate-700/60">
-                  {["Date", "Check In", "Check Out", "Work Hours", "Extra Hours", "Status"].map(
-                    (col) => (
-                      <th
-                        key={col}
-                        scope="col"
-                        className="px-5 py-3.5 text-left text-[10px] font-semibold
-                          text-slate-500 uppercase tracking-widest whitespace-nowrap"
-                      >
-                        {col}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-700/30">
-                {records.map((rec) => (
-                  <tr
-                    key={rec.id}
-                    className="hover:bg-slate-700/20 transition-colors duration-100"
-                  >
-                    {/* Date */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-white">
-                        {fmtDateCell(rec.date)}
-                      </span>
-                    </td>
-
-                    {/* Check In */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-mono
-                        ${rec.checkIn ? "text-green-400" : "text-slate-600"}`}>
-                        {fmtTime(rec.checkIn)}
-                      </span>
-                    </td>
-
-                    {/* Check Out */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-mono
-                        ${rec.checkOut ? "text-amber-400" : "text-slate-600"}`}>
-                        {fmtTime(rec.checkOut)}
-                      </span>
-                    </td>
-
-                    {/* Work Hours */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-300">
-                        {fmtHours(rec.workHours)}
-                      </span>
-                    </td>
-
-                    {/* Extra Hours — highlighted only when > 0 */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      {(rec.extraHours ?? 0) > 0 ? (
-                        <span className="text-sm font-medium text-indigo-400">
-                          +{fmtHours(rec.extraHours)}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-slate-600">—</span>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <StatusBadge status={rec.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Days Present" value={summary.presentDays} note="Present or half-day records" featured />
+        <StatCard label="Work Hours" value={fmtHours(summary.totalWorkHrs)} note="Total tracked this month" />
+        <StatCard label="Leave Days" value={summary.leaveDays} note="Approved leave entries" />
+        <StatCard label="Extra Hours" value={fmtHours(summary.extraHours)} note="Beyond regular schedule" />
       </div>
 
-      {/* Footer: record count */}
-      {!isLoading && !fetchError && records.length > 0 && (
-        <p className="text-xs text-slate-600 text-right mt-3">
-          {records.length} record{records.length !== 1 ? "s" : ""} in {fmtMonthLabel(year, month)}
-        </p>
-      )}
+      <div className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr_0.68fr]">
+        <section className="rounded-3xl bg-white p-5 shadow-sm">
+          <h2 className="text-base font-bold text-[#111814]">Weekly Activity</h2>
+          <div className="mt-5 flex h-44 items-end justify-between gap-3">
+            {miniBars.map((item, index) => {
+              const hours = item.workHours ?? 0;
+              const height = Math.max(22, Math.min(100, hours * 12));
+              const isStrong = item.status === "PRESENT" || item.status === "HALF_DAY";
+              return (
+                <div key={item.id} className="flex flex-1 flex-col items-center gap-3">
+                  <div
+                    className={`w-full max-w-[54px] rounded-full ${
+                      isStrong ? "bg-[#137d4c]" : index % 2 ? "bg-[#d6ddd4]" : "bg-[repeating-linear-gradient(135deg,#d6ddd4_0,#d6ddd4_3px,transparent_3px,transparent_7px)]"
+                    }`}
+                    style={{ height: `${height}%` }}
+                    title={`${fmtDateCell(item.date)} - ${fmtHours(item.workHours)}`}
+                  />
+                  <span className="text-xs font-semibold text-[#8b9188]">
+                    {new Date(item.date).toLocaleDateString(undefined, { weekday: "short" }).slice(0, 1)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-3xl bg-white p-5 shadow-sm">
+          <h2 className="text-base font-bold text-[#111814]">Today</h2>
+          <div className="mt-5">
+            <p className="text-2xl font-bold leading-tight tracking-[-0.04em] text-[#102016]">
+              {summary.latest?.status ? summary.latest.status.replace("_", " ") : "No entry yet"}
+            </p>
+            <p className="mt-2 text-sm text-[#8b9188]">
+              Check in: {fmtTime(summary.latest?.checkIn ?? null)}
+            </p>
+            <p className="mt-1 text-sm text-[#8b9188]">
+              Check out: {fmtTime(summary.latest?.checkOut ?? null)}
+            </p>
+            <button className="mt-7 w-full rounded-full bg-[#0f7a4b] px-5 py-3 text-sm font-bold text-white">
+              Use Check-in Widget
+            </button>
+          </div>
+        </section>
+
+        <section className="rounded-3xl bg-white p-5 shadow-sm">
+          <h2 className="text-base font-bold text-[#111814]">Month Mix</h2>
+          <div className="mt-5 space-y-4">
+            {[
+              ["Present", summary.presentDays, "bg-[#168350]"],
+              ["Leave", summary.leaveDays, "bg-[#f5b233]"],
+              ["Absent", summary.absentDays, "bg-[#e45d46]"],
+            ].map(([label, value, color]) => (
+              <div key={label}>
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-bold text-[#111814]">{label}</span>
+                  <span className="text-[#8b9188]">{value}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[#e3e7e1]">
+                  <div
+                    className={`h-full rounded-full ${color}`}
+                    style={{ width: `${Math.min(100, Number(value) * 16)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_0.68fr]">
+        <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-[#edf0eb] px-5 py-4">
+            <h2 className="text-base font-bold text-[#111814]">Attendance Log</h2>
+            <span className="text-xs font-semibold text-[#8b9188]">
+              {records.length} record{records.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {isLoading ? (
+            <div className="grid min-h-[240px] place-items-center text-sm font-semibold text-[#8b9188]">
+              Loading attendance...
+            </div>
+          ) : records.length === 0 ? (
+            <div className="grid min-h-[240px] place-items-center px-6 text-center">
+              <div>
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-[#eef1ec] text-2xl text-[#8b9188]">
+                  □
+                </div>
+                <p className="mt-4 text-sm font-bold text-[#111814]">No records found</p>
+                <p className="mt-1 text-xs text-[#8b9188]">No attendance entries for {fmtMonthLabel(year, month)}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#fafbf8] text-xs uppercase tracking-[0.12em] text-[#8b9188]">
+                  <tr>
+                    {["Date", "Check In", "Check Out", "Work Hours", "Extra", "Status"].map((col) => (
+                      <th key={col} className="whitespace-nowrap px-5 py-4 font-bold">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#edf0eb]">
+                  {records.map((rec) => (
+                    <tr key={rec.id} className="hover:bg-[#fafbf8]">
+                      <td className="whitespace-nowrap px-5 py-4 font-bold text-[#111814]">{fmtDateCell(rec.date)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-[#137d4c]">{fmtTime(rec.checkIn)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-[#7d847c]">{fmtTime(rec.checkOut)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 font-semibold text-[#111814]">{fmtHours(rec.workHours)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-[#e45d46]">
+                        {(rec.extraHours ?? 0) > 0 ? `+${fmtHours(rec.extraHours)}` : "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusClass(rec.status)}`}>
+                          {rec.status.replace("_", " ")}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="overflow-hidden rounded-3xl bg-[#063a23] p-5 text-white shadow-sm">
+          <h2 className="text-base font-bold">Attendance Progress</h2>
+          <div className="mt-8 rounded-[28px] bg-[radial-gradient(circle_at_top_right,#0f7a4b,transparent_45%),linear-gradient(135deg,#062417,#0d5d35)] p-6 text-center shadow-inner">
+            <p className="text-6xl font-bold tracking-[-0.06em]">{summary.progress}%</p>
+            <p className="mt-2 text-sm text-white/65">Presence ratio this month</p>
+            <div className="mt-8 h-2 overflow-hidden rounded-full bg-white/15">
+              <div className="h-full rounded-full bg-white" style={{ width: `${summary.progress}%` }} />
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

@@ -1,25 +1,210 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import NavShell from "@/components/employee/NavShell";
+import Avatar from "@/components/ui/Avatar";
 import CheckInWidget from "@/components/employee/CheckInWidget";
-import { AttendanceStatusProvider } from "@/context/AttendanceStatusContext";
+import { AttendanceStatusProvider, useAttendanceStatus } from "@/context/AttendanceStatusContext";
 
-// ─── Auth-guarded layout for all (employee) routes ───────────────────────────
-// This layout wraps: /attendance, /time-off, /profile  (Steps 5–7).
-// It does NOT wrap /login or /change-password (those are outside this group).
-//
-// Guards:
-//   • No user in context → redirect to /login
-//   • mustChangePassword is still true → redirect to /change-password
-//     (prevents employees from skipping the forced password change by typing
-//     a URL directly)
-//
-// Member 4 note: import NavShell from "@/components/employee/NavShell" and
-// wrap your own layout(s) with <AttendanceStatusProvider> so the status dot
-// works across the full app.
+const menuItems = [
+  { label: "Dashboard", href: "/attendance", icon: "grid" },
+  { label: "Profile", href: "/profile", icon: "user" },
+  { label: "Time Off", href: "/time-off", icon: "calendar" },
+  { label: "Directory", href: "/employees", icon: "team" },
+];
+
+function Icon({ name }: { name: string }) {
+  if (name === "user") {
+    return (
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+    );
+  }
+
+  if (name === "calendar") {
+    return (
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M7 3v4" />
+        <path d="M17 3v4" />
+        <path d="M4 9h16" />
+        <path d="M5 5h14v15H5z" />
+      </svg>
+    );
+  }
+
+  if (name === "team") {
+    return (
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M16 11a4 4 0 1 0-8 0" />
+        <path d="M5 20a7 7 0 0 1 14 0" />
+        <path d="M18 9.5a3 3 0 0 1 3 3" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 4h7v7H4z" />
+      <path d="M13 4h7v7h-7z" />
+      <path d="M4 13h7v7H4z" />
+      <path d="M13 13h7v7h-7z" />
+    </svg>
+  );
+}
+
+function StatusPill() {
+  const { todayStatus } = useAttendanceStatus();
+  const label =
+    todayStatus === "PRESENT"
+      ? "Checked in"
+      : todayStatus === "LEAVE"
+        ? "On leave"
+        : todayStatus === "ABSENT"
+          ? "Absent"
+          : "Not checked in";
+  const dot =
+    todayStatus === "PRESENT"
+      ? "bg-[#21c96f]"
+      : todayStatus === "LEAVE"
+        ? "bg-[#f4b63f]"
+        : todayStatus === "ABSENT"
+          ? "bg-[#e45d46]"
+          : "bg-[#a6ada5]";
+
+  return (
+    <div className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#6f776e] shadow-sm sm:flex">
+      <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+      {label}
+    </div>
+  );
+}
+
+function EmployeeShell({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    logout();
+    router.push("/login");
+  }
+
+  return (
+    <div className="min-h-screen bg-[#e7e8e6] px-3 py-4 text-[#111814] sm:px-6 lg:px-10">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl overflow-hidden rounded-[28px] border-[10px] border-white bg-[#f7f7f4] shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-[#e6e8e4] bg-[#f3f4f1] px-5 py-7 lg:flex">
+          <Link href="/attendance" className="mb-12 flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#0f7a4b] text-[#0f7a4b]">
+              <span className="h-3 w-3 rounded-full border-4 border-current" />
+            </div>
+            <span className="text-lg font-bold tracking-tight">Shiftly</span>
+          </Link>
+
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9a9f99]">
+            Menu
+          </p>
+          <nav className="space-y-2">
+            {menuItems.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${
+                    active
+                      ? "bg-white text-[#0f7a4b] shadow-sm"
+                      : "text-[#929891] hover:bg-white/70 hover:text-[#1f2a24]"
+                  }`}
+                >
+                  {active && <span className="absolute -left-5 h-10 w-1.5 rounded-r-full bg-[#14844f]" />}
+                  <Icon name={item.icon} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <p className="mb-4 mt-12 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9a9f99]">
+            General
+          </p>
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold text-[#929891] hover:bg-white/70 hover:text-[#1f2a24]"
+          >
+            <Icon name="calendar" />
+            Logout
+          </button>
+
+          <div className="mt-auto overflow-hidden rounded-3xl bg-[#063a23] p-4 text-white shadow-lg">
+            <p className="text-sm font-bold leading-tight">Your workday at a glance</p>
+            <p className="mt-2 text-[11px] leading-relaxed text-white/65">
+              Check in, review hours, and keep leave requests moving.
+            </p>
+          </div>
+        </aside>
+
+        <section className="flex min-w-0 flex-1 flex-col">
+          <header className="flex items-center justify-between gap-4 border-b border-[#e6e8e4] bg-[#f7f7f4] px-4 py-4 sm:px-6">
+            <div className="relative hidden min-w-0 max-w-sm flex-1 sm:block">
+              <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-[#7d847c]">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="m21 21-4.3-4.3" />
+                  <circle cx="11" cy="11" r="7" />
+                </svg>
+              </span>
+              <input
+                type="search"
+                placeholder="Search workspace"
+                className="h-12 w-full rounded-2xl border border-[#eceee9] bg-white pl-11 pr-4 text-sm text-[#1f2a24] outline-none transition placeholder:text-[#a8ada6] focus:border-[#14844f]"
+              />
+            </div>
+
+            <nav className="flex gap-2 overflow-x-auto lg:hidden">
+              {menuItems.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
+                      active ? "bg-[#137d4c] text-white" : "bg-white text-[#7d847c]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="ml-auto flex items-center gap-3">
+              <StatusPill />
+              <button className="hidden h-11 w-11 place-items-center rounded-2xl bg-white text-[#1f2a24] shadow-sm sm:grid" aria-label="Notifications">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                  <path d="M10 21h4" />
+                </svg>
+              </button>
+              <Link href="/profile" className="flex min-w-0 items-center gap-3 rounded-2xl bg-white py-1.5 pl-2 pr-4 shadow-sm">
+                {user && <Avatar name={user.name} src={user.profilePictureUrl} size="sm" />}
+                <span className="hidden min-w-0 sm:block">
+                  <span className="block max-w-[150px] truncate text-sm font-bold text-[#111814]">{user?.name}</span>
+                  <span className="block max-w-[150px] truncate text-xs text-[#7d847c]">{user?.email}</span>
+                </span>
+              </Link>
+            </div>
+          </header>
+
+          <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+        </section>
+      </div>
+      <CheckInWidget />
+    </div>
+  );
+}
 
 export default function EmployeeLayout({
   children,
@@ -30,71 +215,18 @@ export default function EmployeeLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; // wait until localStorage has been read
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (user.mustChangePassword) {
-      router.replace("/change-password");
-    }
+    if (isLoading) return;
+    if (!user) router.replace("/login");
+    else if (user.mustChangePassword) router.replace("/change-password");
   }, [user, isLoading, router]);
 
-  // ── Loading / unauthenticated state ──────────────────────────────────────
-  // Render a full-screen spinner while auth is being determined, so the
-  // protected page content never flashes before the redirect fires.
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <svg
-            className="animate-spin w-8 h-8 text-indigo-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-label="Loading"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            />
-          </svg>
-          <p className="text-slate-500 text-sm">Loading…</p>
-        </div>
-      </div>
-    );
+  if (isLoading || !user || user.mustChangePassword) {
+    return <div className="min-h-screen bg-[#eef0ef]" />;
   }
 
-  // ── Authenticated: render nav + page ─────────────────────────────────────
   return (
     <AttendanceStatusProvider>
-      <div className="min-h-screen bg-slate-950">
-        <NavShell />
-        {/*
-          CheckInWidget floats fixed bottom-right over every employee page.
-          It lives here (inside AttendanceStatusProvider) so it can call
-          setTodayStatus to flip the nav dot on check-in/out.
-        */}
-        <CheckInWidget />
-        {/*
-          pt-16 offsets the fixed nav bar (h-16 = 64px).
-          Pages fill the rest of the viewport below the nav.
-        */}
-        <main className="pt-16">
-          {children}
-        </main>
-      </div>
+      <EmployeeShell>{children}</EmployeeShell>
     </AttendanceStatusProvider>
   );
 }
