@@ -63,8 +63,10 @@ export default function LoginPage() {
       // If first login, force password change before anything else
       if (data.mustChangePassword) {
         router.push("/change-password");
+      } else if (authUser.role === "ADMIN") {
+        router.push("/admin/analytics");
       } else {
-        router.push("/employees"); // Member 4's landing page
+        router.push("/attendance");
       }
     } catch (err: unknown) {
       const msg =

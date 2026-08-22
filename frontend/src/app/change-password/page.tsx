@@ -40,7 +40,7 @@ export default function ChangePasswordPage() {
   // If somehow the user lands here but doesn't need to change password, redirect away
   useEffect(() => {
     if (user && !user.mustChangePassword) {
-      router.replace("/employees");
+      router.replace(user.role === "ADMIN" ? "/admin/analytics" : "/attendance");
     }
   }, [user, router]);
 
@@ -74,7 +74,7 @@ export default function ChangePasswordPage() {
         setUser({ ...user, mustChangePassword: false });
       }
 
-      router.push("/employees");
+      router.push(user?.role === "ADMIN" ? "/admin/analytics" : "/attendance");
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
