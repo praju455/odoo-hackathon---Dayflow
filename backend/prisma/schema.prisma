@@ -1,3 +1,10 @@
+// ============================================================
+// Dayflow HRMS — Prisma Schema
+// Member 1 owns: Company, User (and their migrations)
+// Member 2 owns: Attendance (extended), LeaveAllocation,
+//                LeaveRequest, SalaryStructure, SalaryComponent
+// ============================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,22 +14,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────
+
 enum Role {
   ADMIN
   EMPLOYEE
 }
 
+// Member 2 extended: added LEAVE to track leave days in attendance
 enum AttendanceStatus {
   PRESENT
   ABSENT
   HALF_DAY
+  LEAVE
 }
 
+// Member 2 enum for leave request lifecycle
 enum LeaveRequestStatus {
   PENDING
   APPROVED
   REJECTED
 }
+
+// Member 2 enum for wage period
+enum WageType {
+  MONTHLY
+  YEARLY
+}
+
+// Member 2 enum for salary component calculation type
+enum ComponentType {
+  FIXED            // calculatedAmount = value (raw rupee amount)
+  PERCENT_OF_WAGE  // calculatedAmount = value% of fixedWage
+  PERCENT_OF_BASIC // calculatedAmount = value% of Basic component's calculatedAmount
+}
+
+// ─────────────────────────────────────────
+// Member 1 models (Company, User)
+// ─────────────────────────────────────────
 
 model Company {
   id        String   @id @default(uuid())
@@ -59,6 +90,8 @@ model User {
   company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   manager          User?             @relation("UserManager", fields: [managerId], references: [id])
   reports          User[]            @relation("UserManager")
+
+  // Member 2 relations
   attendance       Attendance[]
   leaveAllocations LeaveAllocation[]
   leaveRequests    LeaveRequest[]
@@ -68,71 +101,125 @@ model User {
   @@index([managerId])
 }
 
+// ─────────────────────────────────────────
+// Member 2 — Attendance
+// Extended from Member 1's base model:
+//   + checkIn / checkOut timestamps
+//   + workHours / extraHours computation fields
+//   + LEAVE status added to AttendanceStatus enum
+// These fields are the source of truth for payable days.
+// ─────────────────────────────────────────
+
 model Attendance {
-  id        String           @id @default(uuid())
-  userId    String
-  date      DateTime
-  status    AttendanceStatus @default(PRESENT)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id         String           @id @default(uuid())
+  userId     String
+  date       DateTime         @db.Date   // store only the calendar date
+  checkIn    DateTime?                   // full timestamp set on check-in
+  checkOut   DateTime?                   // full timestamp set on check-out
+  workHours  Float?                      // decimal hours: (checkOut - checkIn)
+  extraHours Float?                      // hours beyond standard 8-hour day
+  status     AttendanceStatus @default(ABSENT)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, date])
+  @@unique([userId, date])  // one record per employee per calendar day
   @@index([userId])
 }
+
+// ─────────────────────────────────────────
+// Member 2 — Leave Allocation
+// Tracks how many days of each leave type an employee has.
+// Extended from Member 1's base: leaveType kept as String for
+// flexibility; year scopes allocations per calendar year.
+// Default seeds: PAID=24, SICK=7, UNPAID=9999 (effectively unlimited)
+// ─────────────────────────────────────────
 
 model LeaveAllocation {
   id        String   @id @default(uuid())
   userId    String
-  leaveType String
-  totalDays Int
+  leaveType String   // "PAID" | "SICK" | "UNPAID"
+  totalDays Int      // annual entitlement
   usedDays  Int      @default(0)
-  year      Int
+  year      Int      // e.g. 2026
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, leaveType, year])
+  @@unique([userId, leaveType, year])  // one record per type per year
   @@index([userId])
 }
+
+// ─────────────────────────────────────────
+// Member 2 — Leave Request
+// Extended from Member 1's base:
+//   + allocationDays (computed from date range on create)
+//   + remarks / attachmentUrl (for sick-leave certificates)
+//   + adminComment (set by admin on approve/reject)
+// ─────────────────────────────────────────
 
 model LeaveRequest {
-  id        String             @id @default(uuid())
-  userId    String
-  leaveType String
-  startDate DateTime
-  endDate   DateTime
-  reason    String?
-  status    LeaveRequestStatus @default(PENDING)
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  id             String             @id @default(uuid())
+  userId         String
+  leaveType      String             // "PAID" | "SICK" | "UNPAID"
+  startDate      DateTime           @db.Date
+  endDate        DateTime           @db.Date
+  allocationDays Int                // (endDate - startDate) + 1, computed on create
+  reason         String?            // optional employee remarks
+  attachmentUrl  String?            // filename/path only; soft-required for SICK leave
+  status         LeaveRequestStatus @default(PENDING)
+  adminComment   String?            // set by admin on approve/reject
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
+// ─────────────────────────────────────────
+// Member 2 — Salary Structure
+// Replaces Member 1's simpler annualCtc model with a full
+// calculation engine: wageType, fixedWage, PF %, professionalTax.
+// All component amounts are recomputed on every PUT /api/salary/:userId
+// ─────────────────────────────────────────
+
 model SalaryStructure {
-  id            String            @id @default(uuid())
-  userId        String            @unique
-  annualCtc     Decimal           @db.Decimal(12, 2)
-  effectiveFrom DateTime
-  components    SalaryComponent[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id                String    @id @default(uuid())
+  userId            String    @unique  // one structure per employee
+  wageType          WageType  @default(MONTHLY)
+  fixedWage         Float     // gross wage (monthly or yearly)
+  pfEmployeePercent Float     @default(12)  // % of Basic deducted from employee
+  pfEmployerPercent Float     @default(12)  // % of Basic contributed by employer
+  professionalTax   Float     @default(200) // flat monthly deduction (₹)
+  effectiveFrom     DateTime  @default(now())
+  components        SalaryComponent[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ─────────────────────────────────────────
+// Member 2 — Salary Component
+// Each row is one pay component (Basic, HRA, etc.).
+// compType drives how calculatedAmount is computed:
+//   FIXED           → calculatedAmount = value
+//   PERCENT_OF_WAGE → calculatedAmount = (value / 100) * fixedWage
+//   PERCENT_OF_BASIC→ calculatedAmount = (value / 100) * Basic.calculatedAmount
+// ─────────────────────────────────────────
+
 model SalaryComponent {
-  id                String   @id @default(uuid())
+  id                String        @id @default(uuid())
   salaryStructureId String
-  name              String
-  amount            Decimal  @db.Decimal(12, 2)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  name              String        // e.g. "Basic", "HRA", "Performance Bonus"
+  compType          ComponentType
+  value             Float         // raw amount (FIXED) or percentage number (PERCENT_*)
+  calculatedAmount  Float         @default(0) // always recomputed on save; never set manually
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   salaryStructure SalaryStructure @relation(fields: [salaryStructureId], references: [id], onDelete: Cascade)
 
