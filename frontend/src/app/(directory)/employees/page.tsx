@@ -89,41 +89,41 @@ export default function EmployeesPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#0f7a4b]">
               People Directory
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">Employees</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-[#111814] sm:text-5xl">Employees</h1>
+            <p className="mt-2 max-w-2xl text-base leading-7 text-[#7b837a]">
               Browse teammates, check departments, and open a profile for work details. Admins can also review live status and add new employees.
             </p>
           </div>
-
-          {isAdmin && (
-            <Link
-              href="/admin/employees/new"
-              className="inline-flex items-center justify-center rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"
-            >
-              + Add Employee
-            </Link>
-          )}
         </div>
+
+        {isAdmin && (
+          <Link
+            href="/admin/employees/new"
+            className="inline-flex items-center justify-center rounded-full bg-[#0f7a4b] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#0b633c]"
+          >
+            + Add Employee
+          </Link>
+        )}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-3xl border border-[#e5e9e2] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-bold text-slate-950">
+          <p className="text-sm font-bold text-[#111814]">
             {employees.length > 0
               ? `${employees.length} team member${employees.length === 1 ? "" : "s"}`
               : "Team members"}
           </p>
-          <p className="text-xs text-slate-500">Showing {filtered.length} result{filtered.length === 1 ? "" : "s"}</p>
+          <p className="text-xs text-[#7b837a]">Showing {filtered.length} result{filtered.length === 1 ? "" : "s"}</p>
         </div>
 
         <div className="relative w-full sm:max-w-sm">
-          <span className="absolute inset-y-0 left-4 flex items-center text-slate-400">
+          <span className="absolute inset-y-0 left-4 flex items-center text-[#7b837a]">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
             </svg>
@@ -134,7 +134,7 @@ export default function EmployeesPage() {
             placeholder="Search by name or department..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white"
+            className="h-12 w-full rounded-2xl border border-[#dfe4dd] bg-[#fafbf8] pl-11 pr-4 text-sm text-[#111814] outline-none transition placeholder:text-[#9aa199] focus:border-[#14844f] focus:bg-white"
           />
         </div>
       </div>
@@ -146,8 +146,8 @@ export default function EmployeesPage() {
             ["On Leave", dayRecords.filter((record) => record.status === "LEAVE").length, "bg-amber-50 text-amber-700"],
             ["Absent", Math.max(0, employees.length - dayRecords.length), "bg-slate-100 text-slate-700"],
           ].map(([label, value, cls]) => (
-            <div key={label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+            <div key={label} className="rounded-3xl border border-[#e5e9e2] bg-white p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b837a]">{label}</p>
               <p className={`mt-4 inline-flex rounded-2xl px-4 py-2 text-3xl font-bold ${cls}`}>
                 {value}
               </p>
@@ -159,7 +159,7 @@ export default function EmployeesPage() {
       {loading && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-48 animate-pulse rounded-3xl border border-slate-200 bg-white" />
+            <div key={i} className="h-48 animate-pulse rounded-3xl border border-[#e5e9e2] bg-white" />
           ))}
         </div>
       )}
@@ -172,9 +172,9 @@ export default function EmployeesPage() {
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-16 text-center">
-          <p className="font-semibold text-slate-700">No employees found</p>
-          {search && <p className="mt-1 text-sm text-slate-500">Try a different search term.</p>}
+        <div className="rounded-3xl border border-dashed border-[#dfe4dd] bg-white p-16 text-center">
+          <p className="font-semibold text-[#111814]">No employees found</p>
+          {search && <p className="mt-1 text-sm text-[#7b837a]">Try a different search term.</p>}
         </div>
       )}
 

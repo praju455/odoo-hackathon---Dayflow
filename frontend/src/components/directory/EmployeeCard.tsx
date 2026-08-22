@@ -12,7 +12,7 @@ export default function EmployeeCard({ employee, status }: EmployeeCardProps) {
   return (
     <Link
       href={`/employees/${employee.id}`}
-      className="group block rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg"
+      className="group block rounded-3xl border border-[#e5e9e2] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#0f7a4b]/25 hover:shadow-md"
       aria-label={`View ${employee.name}'s profile`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -22,7 +22,7 @@ export default function EmployeeCard({ employee, status }: EmployeeCardProps) {
 
       <div className="mt-5 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="truncate text-base font-bold text-slate-950 group-hover:text-emerald-800">
+          <p className="truncate text-base font-bold text-[#111814] group-hover:text-[#0f7a4b]">
             {employee.name}
           </p>
           {employee.role === "ADMIN" && (
@@ -31,10 +31,10 @@ export default function EmployeeCard({ employee, status }: EmployeeCardProps) {
             </span>
           )}
         </div>
-        <p className="mt-1 truncate text-sm text-slate-500">
+        <p className="mt-1 truncate text-sm text-[#7b837a]">
           {employee.jobTitle || "Team member"}
         </p>
-        <p className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        <p className="mt-4 inline-flex rounded-full bg-[#f1f4ef] px-3 py-1 text-xs font-semibold text-[#687168]">
           {employee.department || "Unassigned"}
         </p>
       </div>
