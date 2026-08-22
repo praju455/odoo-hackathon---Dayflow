@@ -1,136 +1,116 @@
 <div align="center">
   
 # 🌊 Dayflow HRMS
-**Every workday, perfectly aligned.**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
-[![License](https://img.shields.io/badge/license-MIT-blue)](#)
-[![Frontend](https://img.shields.io/badge/Frontend-Next.js%20%7C%20React-000000?logo=nextdotjs)](#)
-[![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?logo=nodedotjs)](#)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%7C%20Prisma-336791?logo=postgresql)](#)
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=next.js)](#)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?logo=nodedotjs)](#)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](#)
+[![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748?logo=prisma)](#)
 
-*Dayflow is a lightweight, transparent, locally-deployable HRMS core that digitizes the core loop of everyday HR work: who's in the office today, who's on leave, how attendance rolls into pay, and how salary is actually structured.*
+*A lightweight, offline-capable Human Resource Management System (HRMS) built to replace spreadsheets with a unified, transparent data model for attendance, leave balances, and salary computations.*
 
 </div>
 
 ---
 
-## 📖 The Problem We're Solving
+## 🎯 Project Overview
 
-Most small and mid-sized organizations run HR operations on a patchwork of spreadsheets, WhatsApp groups, and paper registers. This creates three concrete failure modes:
-1. **No single source of truth:** Attendance, leave balances, and salary structure live in three different places.
-2. **No self-service:** Employees have to constantly ask HR for their own leave balances or attendance records.
-3. **No auditability:** Approvals happen informally with no record of who approved what leave or why a salary component changed.
+Small organizations often suffer from fragmented HR data: attendance in registers, leave balances in Excel, and salary structures in isolated PDFs. **Dayflow** solves this by unifying these pillars into a single, cohesive, relational database application.
 
-**Dayflow** removes this friction by digitizing core HR operations end-to-end: **onboarding, profile management, attendance tracking, leave management, and payroll visibility**.
-
----
-
-## ✨ Novelty & Unique Selling Points
-
-*   🔐 **Credentials you don't type, you earn:** Auto-generated Login IDs (company code + initials + join year + serial) mirroring real enterprise HR systems.
-*   🟢 **Presence as a first-class citizen:** Live status dots on the employee directory (Present, On Leave, Absent) — closer to a Slack status indicator than a static spreadsheet.
-*   🧮 **A salary engine, not a salary field:** Percentage-based, auto-recalculating, cascading components with hard caps against over-allocation.
-*   ⚖️ **Balances that actually move:** Approving a leave request deducts real days from a real balance, offering a true before/after ledger.
-*   💻 **Local-first Architecture:** Designed to run with zero external cloud dependencies if needed. The stack is heavily data-driven, storing state in a relational database rather than mocking with static JSON.
+**Key Capabilities:**
+*   **Live Presence Directory:** Real-time visibility of employee status (Present, On Leave, Absent) directly on the organizational directory.
+*   **Transactional Leave Ledger:** Leave approvals mathematically deduct from an employee's annual allocation via atomic database transactions, ensuring zero race conditions.
+*   **Dynamic Salary Engine:** A sophisticated payroll module that computes percentage-based cascading components (e.g., HRA as % of Basic), enforcing hard caps against over-allocation while automatically calculating statutory Provident Fund (PF) and Professional Tax deductions.
+*   **Auto-Generated Credentials:** Enterprise-grade onboarding where system-generated IDs (e.g., `CORP-DS-2026-001`) replace manual sign-ups.
 
 ---
 
-## 🏗️ System Architecture & Tech Stack
+## 🏗️ Architecture & Tech Stack
 
-Dayflow is built on a modern, robust tech stack emphasizing data integrity and offline capabilities. 
+Dayflow is engineered for **data integrity** and **local-first deployment**, allowing high-privacy organizations to run it on a local network without cloud vendor lock-in.
 
 ### Technology Stack
-*   **Frontend:** Next.js (React), Tailwind CSS, Axios
-*   **Backend:** Node.js, Express.js
-*   **Database & ORM:** PostgreSQL, Prisma ORM
-*   **Security:** JWT (JSON Web Tokens), Bcrypt for password hashing, Zod for robust input validation.
+*   **Client:** React 18, Next.js 14, Tailwind CSS, Axios
+*   **Server:** Node.js, Express.js
+*   **Database:** PostgreSQL 16 (via Docker)
+*   **ORM:** Prisma Client
+*   **Security & Validation:** JWT (Auth), Bcrypt (Hashing), Zod (Strict Payload Validation)
 
-### Architecture Diagram
+### System Flow Diagram
 
 ```mermaid
 graph TD
-    User([End User / Admin]) -->|Interacts with UI| UI[Next.js Frontend]
+    Client([Client / Browser]) -->|HTTPS REST| API[Express API Gateway]
     
-    subgraph Dayflow System Architecture
-        UI -->|REST API Requests| API[Express.js Backend API]
+    subgraph Backend Infrastructure
+        API -->|Middleware| Auth[JWT Authentication]
+        API -->|Middleware| Validator[Zod Input Validation]
         
-        API -->|Validates Input| Zod[Zod Validation Layer]
-        API -->|Authenticates| Auth[JWT & Bcrypt Security]
+        Auth --> Controllers
+        Validator --> Controllers
         
-        Zod --> Core[Core Business Logic Engines]
-        Auth --> Core
+        subgraph Business Logic Engines
+            Controllers -->|Action| SalaryEngine[Salary Math Engine]
+            Controllers -->|Action| LeaveLedger[Leave Transaction Ledger]
+            Controllers -->|Action| AttendanceTracker[Attendance Tracker]
+        end
         
-        Core -->|Computes| Salary[Salary & Tax Calculation Engine]
-        Core -->|Updates| Leave[Leave & Attendance Ledger]
-        
-        Core -->|Queries & Mutates| Prisma[Prisma ORM]
+        SalaryEngine --> ORM[Prisma ORM]
+        LeaveLedger --> ORM
+        AttendanceTracker --> ORM
     end
     
-    Prisma -->|Reads / Writes| DB[(PostgreSQL Database)]
+    ORM -->|TCP Connection| DB[(PostgreSQL Database)]
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🗄️ Core Data Model
 
-### Prerequisites
-*   [Node.js](https://nodejs.org/) (v18+)
-*   [Docker](https://www.docker.com/) (if running PostgreSQL locally via docker-compose)
-*   Git
+*   **`User` & `Company`:** Multi-tenant ready schema. Supports role-based access control (Admin vs. Employee).
+*   **`Attendance`:** Tracks `checkIn`, `checkOut`, and automatically derives `workHours` and `extraHours`. Statuses: `PRESENT`, `ABSENT`, `HALF_DAY`, `LEAVE`.
+*   **`LeaveAllocation` & `LeaveRequest`:** Scoped by calendar year. Requests are bound to specific types (`PAID`, `SICK`, `UNPAID`).
+*   **`SalaryStructure` & `SalaryComponent`:** 1-to-many relationship defining the fixed base wage alongside variable/fixed earnings (`PERCENT_OF_BASIC`, `PERCENT_OF_WAGE`, `FIXED`).
 
-### 1. Backend Setup
+---
 
-Open your first terminal window:
+## 🚀 Quickstart Guide
+
+### 1. Database & Backend
+Ensure you have Docker and Node.js installed.
 
 ```bash
-# Clone the repository
+# 1. Clone & enter directory
 git clone https://github.com/praju455/odoo-hackathon---Dayflow.git
 cd odoo-hackathon---Dayflow
 
-# Start the PostgreSQL Database using Docker
+# 2. Start PostgreSQL
 docker-compose up -d
 
-# Navigate to backend and install dependencies
+# 3. Setup Backend
 cd backend
 npm install
-
-# Setup environment variables
 cp .env.example .env
-# Edit .env to match: DATABASE_URL="postgresql://dayflow:dayflow@localhost:5432/dayflow?schema=public"
 
-# Run database migrations
+# 4. Migrate Database & Start Server
 npm run db:generate
 npm run db:migrate
-
-# Start the Backend Server
 npm run dev
+# Backend runs on http://localhost:3000
 ```
-*The backend API will run on `http://localhost:3000`.*
 
-### 2. Frontend Setup
-
-Open your second terminal window:
+### 2. Frontend Application
+In a separate terminal window:
 
 ```bash
-# Navigate to the frontend directory
 cd frontend
 npm install
-
-# Start the Next.js Frontend Server
 npm run dev
+# Frontend runs on http://localhost:3001
 ```
-*The web app will run on `http://localhost:3001` (or whatever port Next.js assigns).*
 
 ---
-
-## 🛡️ Hackathon Constraints Achieved
-
-*   ✅ **Real/Dynamic Data Sources:** No static JSON mocking. All features read/write to the Prisma relational database.
-*   ✅ **Robust Validation:** Implemented using Zod on the backend, ensuring guaranteed data integrity.
-*   ✅ **Responsive & Clean UI:** Hand-crafted using Tailwind CSS for a seamless user experience.
-*   ✅ **Proper Git Usage:** Cleanly merged and tracked version history showcasing full stack development across both frontend and backend modules.
-
 <div align="center">
-  <i>Prepared for the 8-Hour Hackathon Submission</i>
+  <i>Built for the 8-Hour HRMS Hackathon</i>
 </div>
