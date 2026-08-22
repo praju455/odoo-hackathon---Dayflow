@@ -27,6 +27,14 @@ const forbiddenSelfUpdateFields = [
 
 const selfUpdateSchema = z.object({
   phone: z.string().trim().min(7).optional(),
+  dateOfBirth: z.string().date().optional(),
+  gender: z.string().trim().min(1).optional(),
+  maritalStatus: z.string().trim().min(1).optional(),
+  personalEmail: z.string().trim().email().optional(),
+  panCode: z.string().trim().min(1).optional(),
+  uanCode: z.string().trim().min(1).optional(),
+  accountNumber: z.string().trim().min(1).optional(),
+  homeAddress: z.string().trim().min(1).optional(),
   profilePictureUrl: z.string().trim().url().optional(),
   about: z.string().trim().optional(),
   skills: z.array(z.string().trim().min(1)).optional(),
@@ -66,9 +74,16 @@ router.put("/me", authenticate, async (req, res, next) => {
       return res.status(400).json({ error: formatZodError(parsed) });
     }
 
+    const updateData = {
+      ...parsed.data,
+      dateOfBirth: parsed.data.dateOfBirth
+        ? new Date(`${parsed.data.dateOfBirth}T00:00:00.000Z`)
+        : undefined,
+    };
+
     const user = await prisma.user.update({
       where: { id: req.user.userId },
-      data: parsed.data,
+      data: updateData,
     });
 
     return res.json({ user: toUserProfile(user) });

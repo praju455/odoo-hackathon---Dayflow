@@ -66,26 +66,34 @@ model Company {
 }
 
 model User {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
   companyId          String
-  loginId            String   @unique
+  loginId            String    @unique
   name               String
-  email              String   @unique
+  email              String    @unique
   phone              String?
+  dateOfBirth        DateTime?
+  gender             String?
+  maritalStatus      String?
+  personalEmail      String?
+  panCode            String?
+  uanCode            String?
+  accountNumber      String?
+  homeAddress        String?
   passwordHash       String
-  mustChangePassword Boolean  @default(false)
-  role               Role     @default(EMPLOYEE)
+  mustChangePassword Boolean   @default(false)
+  role               Role      @default(EMPLOYEE)
   department         String?
   jobTitle           String?
   managerId          String?
   profilePictureUrl  String?
   joiningDate        DateTime
   about              String?
-  skills             String[] @default([])
-  certifications     String[] @default([])
-  interests          String[] @default([])
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  skills             String[]  @default([])
+  certifications     String[]  @default([])
+  interests          String[]  @default([])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   manager          User?             @relation("UserManager", fields: [managerId], references: [id])
