@@ -292,7 +292,7 @@ export default function LandingPage() {
 
       {/* ─── FEATURE CARDS 02 / 03 / 04 ─────────────────────────────────────── */}
       <section style={{ background: "#0d0d0d", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(1, 1fr)", '@media (min-width: 768px)': { gridTemplateColumns: 'repeat(3, 1fr)' } }} className="md:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {[
             { num: "02", label: "attendance", desc: "Automate clock-ins and monitor real-time presence with integrated biometric and geolocation validation." },
             { num: "03", label: "scheduling",  desc: "Effortlessly construct and distribute complex shift rosters directly to employee dashboards." },
