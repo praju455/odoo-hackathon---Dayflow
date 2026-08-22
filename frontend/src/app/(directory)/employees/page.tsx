@@ -60,8 +60,6 @@ export default function EmployeesPage() {
         );
 
         // ② Today's attendance — TODO: replace mock with real API
-        // Expected shape: GET /api/attendance?date=YYYY-MM-DD
-        // → { attendance: AttendanceRecord[] }
         let att: AttendanceRecord[] = [];
         try {
           const attRes = await api.get<{ attendance: AttendanceRecord[] }>(
@@ -69,13 +67,14 @@ export default function EmployeesPage() {
           );
           att = attRes.data.attendance ?? [];
         } catch {
-          // Endpoint not yet available — use empty mock
-          att = []; // TODO: replace mock with real API
+          // Endpoint not yet available — use rich mock for demo
+          att = [
+            { id: "a1", userId: "emp-101", date: today, status: "PRESENT", checkIn: "09:00", checkOut: null },
+            { id: "a2", userId: "emp-102", date: today, status: "PRESENT", checkIn: "08:45", checkOut: null },
+          ]; // TODO: replace mock with real API
         }
 
         // ③ Today's approved leaves — TODO: replace mock with real API
-        // Expected shape: GET /api/leave-requests?startDate=...&endDate=...&status=APPROVED
-        // → { leaveRequests: LeaveRecord[] }
         let lv: LeaveRecord[] = [];
         try {
           const lvRes = await api.get<{ leaveRequests: LeaveRecord[] }>(
@@ -83,8 +82,10 @@ export default function EmployeesPage() {
           );
           lv = lvRes.data.leaveRequests ?? [];
         } catch {
-          // Endpoint not yet available — use empty mock
-          lv = []; // TODO: replace mock with real API
+          // Endpoint not yet available — use rich mock for demo
+          lv = [
+            { id: "l1", userId: "emp-103", type: "VACATION", startDate: today, endDate: today, reason: "Vacation", status: "APPROVED" },
+          ]; // TODO: replace mock with real API
         }
 
         setEmployees(empRes.data.employees);

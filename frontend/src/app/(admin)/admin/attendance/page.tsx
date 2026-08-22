@@ -81,7 +81,12 @@ export default function AdminAttendancePage() {
           const attRes = await api.get<{ attendance: AttendanceRecord[] }>(`/attendance?date=${date}`);
           attData = attRes.data.attendance || [];
         } catch (e) {
-          attData = []; // Fallback to mock
+          // Fallback to rich mock for demo
+          attData = [
+            { id: "a1", userId: "emp-101", date, status: "PRESENT", checkIn: "09:02", checkOut: "17:15" },
+            { id: "a2", userId: "emp-102", date, status: "PRESENT", checkIn: "08:50", checkOut: "18:00" },
+            { id: "a3", userId: "emp-103", date, status: "HALF_DAY", checkIn: "09:30", checkOut: "13:00" },
+          ]; // TODO: replace mock with real API
         }
         
         // Map attendance by userId for quick lookup

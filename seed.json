@@ -1,0 +1,89 @@
+{
+  "employees": [
+    {
+      "id": "emp-101",
+      "loginId": "DAY-101",
+      "name": "Alex Johnson",
+      "email": "alex.j@dayflow.app",
+      "phone": "+1 555-0101",
+      "department": "Engineering",
+      "jobTitle": "Senior Software Engineer",
+      "role": "EMPLOYEE",
+      "joiningDate": "2024-03-15",
+      "skills": ["React", "Node.js", "TypeScript"],
+      "profilePictureUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+    },
+    {
+      "id": "emp-102",
+      "loginId": "DAY-102",
+      "name": "Sarah Miller",
+      "email": "sarah.m@dayflow.app",
+      "phone": "+1 555-0102",
+      "department": "Human Resources",
+      "jobTitle": "HR Manager",
+      "role": "ADMIN",
+      "joiningDate": "2023-11-01",
+      "skills": ["Recruitment", "Employee Relations"],
+      "profilePictureUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+    },
+    {
+      "id": "emp-103",
+      "loginId": "DAY-103",
+      "name": "Michael Chen",
+      "email": "michael.c@dayflow.app",
+      "phone": "+1 555-0103",
+      "department": "Design",
+      "jobTitle": "Product Designer",
+      "role": "EMPLOYEE",
+      "joiningDate": "2025-01-10",
+      "skills": ["Figma", "UI/UX", "Prototyping"],
+      "profilePictureUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "att-1",
+      "userId": "emp-101",
+      "date": "2026-08-22",
+      "status": "PRESENT",
+      "checkIn": "09:02",
+      "checkOut": "17:15"
+    },
+    {
+      "id": "att-2",
+      "userId": "emp-102",
+      "date": "2026-08-22",
+      "status": "PRESENT",
+      "checkIn": "08:50",
+      "checkOut": "18:00"
+    },
+    {
+      "id": "att-3",
+      "userId": "emp-103",
+      "date": "2026-08-22",
+      "status": "HALF_DAY",
+      "checkIn": "09:30",
+      "checkOut": "13:00"
+    }
+  ],
+  "leaveRequests": [
+    {
+      "id": "req-1",
+      "userId": "emp-101",
+      "type": "SICK",
+      "startDate": "2026-08-25",
+      "endDate": "2026-08-26",
+      "reason": "Fever and cold",
+      "status": "PENDING"
+    },
+    {
+      "id": "req-2",
+      "userId": "emp-103",
+      "type": "VACATION",
+      "startDate": "2026-09-01",
+      "endDate": "2026-09-05",
+      "reason": "Family trip",
+      "status": "PENDING"
+    }
+  ]
+}
