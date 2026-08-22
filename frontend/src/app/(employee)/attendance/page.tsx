@@ -42,7 +42,7 @@ export default function EmployeeAttendancePage() {
     try {
       setError("");
       const response = await api.get("/analytics/me");
-      setData(response.data);
+      setData(response.data.data);
     } catch {
       setError("Could not load your attendance.");
     } finally {

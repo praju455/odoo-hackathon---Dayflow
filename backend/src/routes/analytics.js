@@ -57,7 +57,7 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
             date: { gte: monthStart, lt: nextMonth },
             user: { companyId: req.user.companyId, role: "EMPLOYEE" },
           },
-          select: { status: true, workMinutes: true, extraMinutes: true },
+          select: { status: true, workHours: true, extraHours: true },
         }),
         prisma.leaveRequest.findMany({
           where: { user: { companyId: req.user.companyId } },
@@ -86,7 +86,7 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
       return summary;
     }, {});
 
-    return res.json({
+    const payload = {
       success: true,
       data: {
         totals: {
@@ -95,7 +95,7 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
           onLeaveToday: new Set(activeLeave.map((request) => request.userId)).size,
           pendingLeaveRequests: leaveRequests.filter((request) => request.status === "PENDING").length,
           workHoursThisMonth: Math.round(
-            monthAttendance.reduce((total, record) => total + (record.workMinutes || 0), 0) / 60
+            monthAttendance.reduce((total, record) => total + (record.workHours || 0), 0)
           ),
         },
         attendance: countByStatus(monthAttendance),
@@ -105,7 +105,10 @@ router.get("/summary", authenticate, requireAdmin, async (req, res, next) => {
         recentHires: employees.slice(0, 6),
         recentLeaveRequests: leaveRequests.slice(0, 8),
       },
-    });
+    };
+    console.log("SENDING ANALYTICS PAYLOAD:", Object.keys(payload.data));
+    console.log("TOTALS:", payload.data.totals);
+    return res.json(payload);
   } catch (err) {
     next(err);
   }
@@ -148,10 +151,10 @@ router.get("/me", authenticate, async (req, res, next) => {
             ["PRESENT", "HALF_DAY"].includes(record.status)
           ).length,
           workHours: Math.round(
-            (attendance.reduce((total, record) => total + (record.workMinutes || 0), 0) / 60) * 10
+            attendance.reduce((total, record) => total + (record.workHours || 0), 0) * 10
           ) / 10,
           extraHours: Math.round(
-            (attendance.reduce((total, record) => total + (record.extraMinutes || 0), 0) / 60) * 10
+            attendance.reduce((total, record) => total + (record.extraHours || 0), 0) * 10
           ) / 10,
           approvedLeaveDays: leaveRequests
             .filter((request) => request.status === "APPROVED")

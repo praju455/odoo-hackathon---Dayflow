@@ -25,6 +25,7 @@ async function seedDefaultLeaveAllocations(
 
   await client.leaveAllocation.createMany({
     data: allocations,
+    skipDuplicates: true,
   });
 }
 

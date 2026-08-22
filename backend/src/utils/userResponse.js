@@ -15,6 +15,12 @@ function toDirectoryUser(user) {
   };
 }
 
+function toArray(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return val.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 function toUserProfile(user) {
   return {
     id: user.id,
@@ -38,9 +44,9 @@ function toUserProfile(user) {
     profilePictureUrl: user.profilePictureUrl,
     joiningDate: user.joiningDate,
     about: user.about,
-    skills: user.skills,
-    certifications: user.certifications,
-    interests: user.interests,
+    skills: toArray(user.skills),
+    certifications: toArray(user.certifications),
+    interests: toArray(user.interests),
     mustChangePassword: user.mustChangePassword,
   };
 }

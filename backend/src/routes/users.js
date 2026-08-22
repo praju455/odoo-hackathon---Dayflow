@@ -76,6 +76,9 @@ router.put("/me", authenticate, async (req, res, next) => {
 
     const updateData = {
       ...parsed.data,
+      skills: parsed.data.skills ? parsed.data.skills.join(",") : undefined,
+      certifications: parsed.data.certifications ? parsed.data.certifications.join(",") : undefined,
+      interests: parsed.data.interests ? parsed.data.interests.join(",") : undefined,
       dateOfBirth: parsed.data.dateOfBirth
         ? new Date(`${parsed.data.dateOfBirth}T00:00:00.000Z`)
         : undefined,
