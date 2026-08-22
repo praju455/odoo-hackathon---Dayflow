@@ -6,6 +6,7 @@ const prisma = require("../db");
 const { authenticate, requireAdmin } = require("../middleware/auth");
 const { generateLoginId, splitName } = require("../utils/loginId");
 const { generateTempPassword } = require("../utils/password");
+const { toDirectoryUser, toUserProfile } = require("../utils/userResponse");
 
 const router = express.Router();
 
@@ -17,6 +18,53 @@ const createEmployeeSchema = z.object({
   jobTitle: z.string().trim().min(2),
   managerId: z.string().uuid().optional(),
   joiningDate: z.string().date(),
+});
+
+const updateEmployeeSchema = z.object({
+  name: z.string().trim().min(2).optional(),
+  email: z.string().trim().email().optional(),
+  phone: z.string().trim().min(7).optional(),
+  department: z.string().trim().min(2).optional(),
+  jobTitle: z.string().trim().min(2).optional(),
+  managerId: z.string().uuid().nullable().optional(),
+  profilePictureUrl: z.string().trim().url().nullable().optional(),
+  joiningDate: z.string().date().optional(),
+  about: z.string().trim().nullable().optional(),
+  skills: z.array(z.string().trim().min(1)).optional(),
+  certifications: z.array(z.string().trim().min(1)).optional(),
+  interests: z.array(z.string().trim().min(1)).optional(),
+});
+
+router.get("/", authenticate, async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { companyId: req.user.companyId },
+      orderBy: { name: "asc" },
+    });
+
+    return res.json({ employees: users.map(toDirectoryUser) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/:id", authenticate, async (req, res, next) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: req.params.id,
+        companyId: req.user.companyId,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.json({ employee: toUserProfile(user) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post("/", authenticate, requireAdmin, async (req, res, next) => {
@@ -109,6 +157,63 @@ router.post("/", authenticate, requireAdmin, async (req, res, next) => {
 
     if (err.code === "P2002") {
       return res.status(409).json({ error: "Employee email or Login ID already exists" });
+    }
+
+    next(err);
+  }
+});
+
+router.put("/:id", authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const parsed = updateEmployeeSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid employee details" });
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        id: req.params.id,
+        companyId: req.user.companyId,
+      },
+      select: { id: true },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    if (parsed.data.managerId) {
+      const manager = await prisma.user.findFirst({
+        where: {
+          id: parsed.data.managerId,
+          companyId: req.user.companyId,
+        },
+        select: { id: true },
+      });
+
+      if (!manager) {
+        return res.status(400).json({ error: "Manager not found" });
+      }
+    }
+
+    const updateData = {
+      ...parsed.data,
+      email: parsed.data.email?.toLowerCase(),
+      joiningDate: parsed.data.joiningDate
+        ? new Date(`${parsed.data.joiningDate}T00:00:00.000Z`)
+        : undefined,
+    };
+
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: updateData,
+    });
+
+    return res.json({ employee: toUserProfile(user) });
+  } catch (err) {
+    if (err.code === "P2002") {
+      return res.status(409).json({ error: "Employee email already exists" });
     }
 
     next(err);

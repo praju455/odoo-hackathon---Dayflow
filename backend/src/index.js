@@ -4,6 +4,7 @@ require("dotenv").config();
 const setupRoutes = require("./routes/setup");
 const authRoutes = require("./routes/auth");
 const employeeRoutes = require("./routes/employees");
+const userRoutes = require("./routes/users");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/setup", setupRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/users", userRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
