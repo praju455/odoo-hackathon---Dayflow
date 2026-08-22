@@ -10,6 +10,9 @@ const titles: Record<string, string> = {
   "/admin/analytics": "Overview",
   "/admin/attendance": "Attendance",
   "/admin/time-off": "Time off",
+  "/admin/projects": "Projects",
+  "/admin/chat": "Team Chat",
+  "/admin/messages": "Messages",
   "/employees": "People",
   "/attendance": "My workday",
   "/profile": "My profile",
@@ -26,6 +29,9 @@ const adminItems = [
   { label: "People",      href: "/employees",         icon: "users-01" as const },
   { label: "Attendance",  href: "/admin/attendance",  icon: "check" as const },
   { label: "Time off",    href: "/admin/time-off",    icon: "clipboard" as const },
+  { label: "Projects",    href: "/admin/projects",    icon: "folder" as const },
+  { label: "Team Chat",   href: "/admin/chat",        icon: "chat" as const },
+  { label: "Messages",    href: "/admin/messages",    icon: "mail" as const },
 ];
 
 const employeeItems = [

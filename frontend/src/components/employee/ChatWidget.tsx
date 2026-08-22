@@ -14,6 +14,7 @@ interface Message {
   text: string;
   provider?: "gemini" | "groq";
   error?: boolean;
+  setup?: boolean;  // true = AI not configured (show setup card, not red error)
 }
 
 // History item shape expected by the backend (role is "user" | "model")
@@ -199,17 +200,25 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
       // If drawer is closed, show unread indicator on the bubble
       if (!isOpen) setHasUnread(true);
     } catch (err: unknown) {
-      const errMsg =
+      const serverMsg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Something went wrong. Please try again.";
+
+      const isSetupError =
+        serverMsg.includes("not configured") ||
+        serverMsg.includes("GEMINI_API_KEY") ||
+        serverMsg.includes("GROQ_API_KEY");
 
       setMessages((prev) => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          text: errMsg,
-          error: true,
+          text: isSetupError
+            ? "The AI assistant needs an API key to work. Ask your admin to add a **GEMINI_API_KEY** or **GROQ_API_KEY** to the backend `.env` file."
+            : serverMsg,
+          error: !isSetupError,
+          setup: isSetupError,
         },
       ]);
     } finally {
@@ -336,11 +345,16 @@ export default function ChatWidget({ offsetRight = "calc(1.5rem + 160px)" }: Cha
                       className={`rounded-2xl px-3.5 py-2.5 ${
                         isUser
                           ? "bg-indigo-600 text-white rounded-br-sm"
+                          : msg.setup
+                          ? "bg-slate-700/60 border border-slate-600/50 text-slate-300 rounded-bl-sm"
                           : msg.error
                           ? "bg-red-500/10 border border-red-500/20 text-red-400 rounded-bl-sm"
                           : "bg-slate-800 text-slate-200 rounded-bl-sm border border-slate-700/40"
                       }`}
                     >
+                      {msg.setup && (
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">⚙️ Setup required</p>
+                      )}
                       <MessageText text={msg.text} />
                     </div>
                     {/* Provider badge for AI messages */}

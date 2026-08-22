@@ -44,6 +44,8 @@ model Company {
   code      String   @unique
   logoUrl   String?
   users     User[]
+  projects  Project[]
+  channelMessages ChannelMessage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -88,6 +90,12 @@ model User {
   leaveRequests    LeaveRequest[]
   salaryStructure  SalaryStructure?
   notifications    Notification[]
+
+  // Member 3 relations
+  projectAssignments ProjectAssignment[]
+  sentMessages       Message[]         @relation("MessageSender")
+  receivedMessages   Message[]         @relation("MessageReceiver")
+  channelMessages    ChannelMessage[]
 
   @@index([companyId])
   @@index([managerId])
@@ -233,3 +241,77 @@ model Notification {
 
   @@index([userId])
 }
+
+// ─────────────────────────────────────────
+// Projects (Member 3 feature)
+// Admin creates projects; employees are assigned.
+// ─────────────────────────────────────────
+
+model Project {
+  id          String   @id @default(uuid())
+  companyId   String
+  name        String
+  description String?
+  department  String?
+  status      String   @default("ACTIVE") // ACTIVE | COMPLETED | IN_REVIEW
+  progress    Int      @default(0)        // 0-100
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignments ProjectAssignment[]
+
+  @@index([companyId])
+}
+
+model ProjectAssignment {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────
+// Direct Messages between users
+// ─────────────────────────────────────────
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("MessageSender",   fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+// ─────────────────────────────────────────
+// Channel Messages (team channels per company)
+// ─────────────────────────────────────────
+
+model ChannelMessage {
+  id        String   @id @default(uuid())
+  companyId String
+  channel   String   // e.g. "general", "engineering", "announcements"
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, channel])
+  @@index([userId])
+}
+

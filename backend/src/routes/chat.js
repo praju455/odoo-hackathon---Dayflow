@@ -113,8 +113,23 @@ router.post("/", authenticate, async (req, res) => {
   const { message, history } = parsed.data;
   const systemPrompt = buildSystemPrompt(req.user);
 
+  // ── Detect placeholder / unconfigured keys ────────────────────────────────
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey   = process.env.GROQ_API_KEY;
+
+  const isPlaceholder = (key) =>
+    !key || key.includes("your_") || key.includes("_here") || key.length < 10;
+
+  if (isPlaceholder(geminiKey) && isPlaceholder(groqKey)) {
+    return res.status(503).json({
+      success: false,
+      message:
+        "AI assistant is not configured yet. To enable it, add a valid GEMINI_API_KEY or GROQ_API_KEY to your backend .env file and restart the server.",
+    });
+  }
+
   // ── Try Gemini first ──────────────────────────────────────────────────────
-  if (process.env.GEMINI_API_KEY) {
+  if (!isPlaceholder(geminiKey)) {
     try {
       const reply = await callGemini(systemPrompt, history, message);
       return res.json({ success: true, reply, provider: "gemini" });
@@ -130,7 +145,7 @@ router.post("/", authenticate, async (req, res) => {
   }
 
   // ── Fall back to Groq ─────────────────────────────────────────────────────
-  if (process.env.GROQ_API_KEY) {
+  if (!isPlaceholder(groqKey)) {
     try {
       const reply = await callGroq(systemPrompt, history, message);
       return res.json({ success: true, reply, provider: "groq" });
@@ -143,10 +158,11 @@ router.post("/", authenticate, async (req, res) => {
     }
   }
 
-  // ── No providers configured ───────────────────────────────────────────────
+  // ── No valid providers configured ─────────────────────────────────────────
   return res.status(503).json({
     success: false,
-    message: "No AI provider configured. Please set GEMINI_API_KEY or GROQ_API_KEY.",
+    message:
+      "AI assistant is not configured yet. Add a valid GEMINI_API_KEY or GROQ_API_KEY to your .env file.",
   });
 });
 

@@ -39,6 +39,8 @@ app.use("/api/leave",         require("./routes/leave"));
 app.use("/api/salary",        require("./routes/salary"));
 app.use("/api/analytics",     require("./routes/analytics"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/projects",      require("./routes/projects"));
+app.use("/api/messages",      require("./routes/messages"));
 
 // ── AI Chat — Gemini primary, Groq fallback ───────────────────────────────────
 app.use("/api/chat",          require("./routes/chat"));
