@@ -1,30 +1,39 @@
+// src/middleware/auth.js
+// JWT auth middleware — aligned with Member 1's User schema.
+// Token payload: { id, loginId, role, companyId }
+
 const jwt = require("jsonwebtoken");
 
+/**
+ * authenticate — verifies the Bearer JWT on every protected route.
+ * Attaches { id, loginId, role, companyId } to req.user on success.
+ */
 function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-  if (!token) {
-    return res.status(401).json({ error: "Authentication required" });
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "No token provided" });
   }
 
+  const token = header.split(" ")[1];
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    return next();
-  } catch (_err) {
-    return res.status(401).json({ error: "Invalid token" });
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload; // { id, loginId, role, companyId }
+    next();
+  } catch {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 }
 
+/**
+ * requireAdmin — must be used AFTER authenticate.
+ * Member 1's schema only has ADMIN and EMPLOYEE roles.
+ * Rejects non-ADMIN users with 403.
+ */
 function requireAdmin(req, res, next) {
   if (req.user?.role !== "ADMIN") {
-    return res.status(403).json({ error: "Admin access required" });
+    return res.status(403).json({ success: false, message: "Admin access required" });
   }
-
-  return next();
+  next();
 }
 
-module.exports = {
-  authenticate,
-  requireAdmin,
-};
+module.exports = { authenticate, requireAdmin };
