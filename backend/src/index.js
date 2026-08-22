@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 
 const setupRoutes = require("./routes/setup");
+const authRoutes = require("./routes/auth");
 const employeeRoutes = require("./routes/employees");
 
 const app = express();
@@ -14,6 +15,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/setup", setupRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 
 app.use((err, _req, res, _next) => {
