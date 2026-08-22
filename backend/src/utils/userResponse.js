@@ -4,6 +4,8 @@ function toDirectoryUser(user) {
     name: user.name,
     profilePictureUrl: user.profilePictureUrl,
     department: user.department,
+    jobTitle: user.jobTitle,
+    loginId: user.loginId,
     role: user.role,
   };
 }

@@ -1,177 +1,209 @@
 <div align="center">
 
-  <h1 align="center">Dayflow HRMS</h1>
+# Dayflow
 
-  <p align="center">
-    <strong>Every workday, perfectly aligned.</strong>
-    <br />
-    A modern, lightweight, and offline-capable Human Resource Management System.
-  </p>
+**A multi-tenant HR workspace for employee onboarding, attendance, leave, profiles, and salary structures.**
 
-  <p align="center">
-    <a href="#-core-philosophy"><img src="https://img.shields.io/badge/Philosophy-Local--First-2D3748?style=for-the-badge" alt="Local First" /></a>
-    <a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-Event--Driven-336791?style=for-the-badge" alt="Event Driven" /></a>
-    <a href="#-tech-stack"><img src="https://img.shields.io/badge/Stack-Next.js%20%7C%20Node-000000?style=for-the-badge&logo=next.js" alt="Tech Stack" /></a>
-  </p>
+![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)
+
 </div>
 
-<hr />
+## Overview
 
-## 📋 Table of Contents
-1. [Core Philosophy](#-core-philosophy)
-2. [Key Capabilities](#-key-capabilities)
-3. [System Architecture](#-system-architecture)
-4. [Data Model](#-data-model)
-5. [API Structure](#-api-structure)
-6. [Getting Started](#-getting-started)
+Dayflow provides one connected workspace for company setup, employee onboarding, personal profiles, daily attendance, leave approvals, annual allocations, and configurable salary calculations. The API enforces company isolation and role-based authorization, while the Next.js client provides separate employee and administrator workflows.
 
----
+## Capabilities
 
-## 💡 Core Philosophy
+- One-time company setup with the first administrator account
+- Generated employee login IDs and one-time temporary credentials
+- Mandatory password change for newly created employees
+- Employee directory and read-only coworker profiles
+- Check-in, check-out, monthly attendance, and admin day view
+- Paid, sick, and unpaid leave requests with transactional approval deductions
+- Current-year leave allocation reporting
+- Monthly or yearly salary structures with fixed, percent-of-wage, and percent-of-Basic components
+- Employee and employer PF, professional tax, gross, deductions, and net salary calculations
+- Seeded demo organization with employees, attendance, leave, and salary data
 
-**Dayflow** was engineered to solve the data fragmentation problem inherent in small-to-medium enterprise (SME) HR operations. By moving away from disconnected spreadsheets and legacy cloud suites, Dayflow offers a **unified, transparent data model** that acts as the single source of truth for organizational presence, time-off ledgers, and payroll computation.
+## Architecture
 
-Designed as a **local-first** application, Dayflow ensures that highly-sensitive employee data remains within the organization's perimeter, requiring zero external cloud dependencies to function natively.
-
----
-
-## 🚀 Key Capabilities
-
-<table>
-  <tr>
-    <td width="50%">
-      <h3>🟢 Live Presence Directory</h3>
-      <p>A real-time organizational directory reflecting live employee status (Present, On Leave, Absent). Replaces static employee lists with a dynamic presence view akin to modern communication tools.</p>
-    </td>
-    <td width="50%">
-      <h3>⚖️ Transactional Leave Ledger</h3>
-      <p>Leave approvals are backed by atomic database transactions. When an Admin approves a request, days are mathematically deducted from the annual allocation, guaranteeing zero race conditions.</p>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <h3>🧮 Dynamic Salary Engine</h3>
-      <p>A sophisticated payroll module computing percentage-based cascading components (e.g., HRA as % of Basic). Enforces hard caps against over-allocation and auto-calculates statutory deductions (PF/PT).</p>
-    </td>
-    <td>
-      <h3>🔐 Enterprise Onboarding</h3>
-      <p>System-generated alphanumeric IDs (e.g., <code>CORP-DS-2026-001</code>) replace manual sign-ups, enforcing standard corporate nomenclature and preventing unauthorized access.</p>
-    </td>
-  </tr>
-</table>
-
----
-
-## 🏗️ System Architecture
-
-Dayflow employs a decoupled client-server architecture, communicating via strict RESTful endpoints secured by JSON Web Tokens (JWT).
-
-### Request Lifecycle
 ```mermaid
-sequenceDiagram
-    participant Client as Next.js Client
-    participant Gateway as Express Router
-    participant Auth as JWT Middleware
-    participant Validator as Zod Validator
-    participant Engine as Business Engine
-    participant DB as PostgreSQL (Prisma)
+flowchart LR
+    Browser[Next.js 14 client] -->|REST + JWT| API[Express API]
+    API --> Guard[JWT authentication and role guards]
+    Guard --> Validation[Zod request validation]
+    Validation --> Services[Attendance, leave, salary, and profile logic]
+    Services --> Prisma[Prisma ORM]
+    Prisma --> DB[(PostgreSQL 16)]
 
-    Client->>Gateway: HTTP Request (e.g., Leave Approval)
-    Gateway->>Auth: Validate Token & Role
-    Auth-->>Gateway: Authorization Granted
-    Gateway->>Validator: Enforce Schema Types
-    Validator-->>Gateway: Payload Sanitized
-    Gateway->>Engine: Execute Business Logic
-    Engine->>DB: Atomic $transaction
-    DB-->>Engine: Commit Success
-    Engine-->>Client: 200 OK (JSON Response)
+    Services --> Transactions[Atomic leave and salary writes]
+    Transactions --> Prisma
 ```
 
-### Technology Stack
-- **Client Presentation:** React 18, Next.js 14, Tailwind CSS
-- **API Services:** Node.js, Express.js
-- **Data Persistence:** PostgreSQL 16
-- **Object Relational Mapping:** Prisma ORM
-- **Security Primitives:** bcryptjs (Hashing), Zod (Schema Validation)
+```text
+Dayflow/
+├── backend/                 Express, Prisma, migrations, seed, tests
+├── frontend/                Next.js App Router and Tailwind CSS
+├── docker-compose.yml       Local PostgreSQL service
+└── README.md
+```
 
----
+## Technology
 
-## 🗄️ Data Model
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Axios |
+| Backend | Node.js, Express 5, Zod, JSON Web Tokens, bcryptjs |
+| Data | PostgreSQL 16, Prisma 6, versioned SQL migrations |
+| Testing | Node test runner, Next.js production build, Prisma validation |
 
-<details>
-<summary><strong>Click to expand Entity Relationship overview</strong></summary>
+## Local Setup
 
-- **`User` / `Company`:** Multi-tenant architecture foundation. Manages hierarchical reporting lines (`managerId`) and RBAC (`Role` enum).
-- **`Attendance`:** Records `checkIn` / `checkOut` timestamps. A background chronological trigger derives daily `workHours` and `extraHours`.
-- **`LeaveAllocation` / `LeaveRequest`:** Scoped annually. Ensures an employee cannot consume more `PAID` or `SICK` days than statically allocated.
-- **`SalaryStructure` / `SalaryComponent`:** 1-to-N relationship defining the base wage and polymorphic components (`FIXED`, `PERCENT_OF_BASIC`, `PERCENT_OF_WAGE`).
+### Prerequisites
 
-</details>
+- Node.js 20 or newer
+- npm
+- Docker Desktop or a local PostgreSQL 16 instance
 
----
+### 1. Start PostgreSQL
 
-## 💻 API Structure
+```bash
+docker compose up -d
+```
 
-The Dayflow backend exposes predictable REST APIs. All payloads enforce strict schema validation to guarantee data integrity before hitting the persistence layer.
+The default development database is exposed at `localhost:5432` with database, user, and password all set to `dayflow`.
 
-**Example: Salary Structure Definition Payload**
+### 2. Start the API
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run db:generate
+npm run db:deploy
+npm run db:seed
+npm run dev
+```
+
+The API runs at [http://localhost:4000](http://localhost:4000). Replace `JWT_SECRET` in `backend/.env` before using Dayflow outside local development.
+
+### 3. Start the web client
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Demo account
+
+After running the seed script:
+
+```text
+Login ID: admin@dayflow.local
+Password: Dayflow123!
+```
+
+The seed is idempotent and can be rerun without duplicating the demo company.
+
+## Environment Variables
+
+### Backend
+
+| Variable | Purpose | Development value |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://dayflow:dayflow@localhost:5432/dayflow` |
+| `JWT_SECRET` | JWT signing secret | Change the example value |
+| `PORT` | API port | `4000` |
+| `FRONTEND_ORIGIN` | Allowed browser origin | `http://localhost:3000` |
+
+### Frontend
+
+| Variable | Purpose | Development value |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Browser-visible API base URL | `http://localhost:4000/api` |
+
+## Roles And Privacy
+
+| Capability | Employee | Admin |
+|---|:---:|:---:|
+| View directory and public profiles | Yes | Yes |
+| Edit own profile and private information | Yes | Yes |
+| Check in/out and view own attendance | Yes | Yes |
+| Request leave and view own balances | Yes | Yes |
+| Create employees | No | Yes |
+| View company attendance and leave status | No | Yes |
+| Approve or reject leave | No | Yes |
+| View and edit salary structures | No | Yes |
+
+Detailed coworker attendance, leave, salary, and private profile data remain administrator-only. The directory intentionally omits live HR status for regular employee accounts.
+
+## API Summary
+
+All protected routes require `Authorization: Bearer <token>`.
+
+| Area | Routes |
+|---|---|
+| Setup and auth | `POST /api/setup`, `POST /api/auth/login`, `PUT /api/auth/change-password` |
+| Users | `GET/PUT /api/users/me` |
+| Employees | `GET/POST /api/employees`, `GET/PUT /api/employees/:id` |
+| Attendance | `POST /api/attendance/checkin`, `POST /api/attendance/checkout`, `GET /api/attendance/me`, `GET /api/attendance/day` |
+| Leave | `GET /api/leave/allocations/me`, `GET /api/leave/allocations/:userId`, `POST /api/leave`, `GET /api/leave/me`, `GET /api/leave`, `PUT /api/leave/:id/status` |
+| Salary | `GET /api/salary/me`, `GET/PUT /api/salary/:userId` |
+
+API errors use a consistent JSON shape:
+
+```json
+{ "error": "Human-readable message" }
+```
+
+## Salary Contract
+
+Every salary structure requires a unique component named `Basic`. Percent-of-Basic components are calculated from that resolved Basic amount, and the total of all earning components cannot exceed the fixed wage.
+
 ```json
 {
   "wageType": "MONTHLY",
   "fixedWage": 50000,
   "pfEmployeePercent": 12,
+  "pfEmployerPercent": 12,
   "professionalTax": 200,
   "components": [
-    {
-      "name": "House Rent Allowance",
-      "compType": "PERCENT_OF_BASIC",
-      "value": 40
-    },
-    {
-      "name": "Performance Bonus",
-      "compType": "FIXED",
-      "value": 2000
-    }
+    { "name": "Basic", "compType": "PERCENT_OF_WAGE", "value": 50 },
+    { "name": "HRA", "compType": "PERCENT_OF_BASIC", "value": 40 }
   ]
 }
 ```
 
----
+## Verification
 
-## ⚙️ Getting Started
-
-Dayflow is container-ready. We recommend using Docker for the data tier during local development.
-
-### 1. Environment Configuration
-```bash
-git clone https://github.com/praju455/odoo-hackathon---Dayflow.git
-cd odoo-hackathon---Dayflow
-docker-compose up -d  # Spin up PostgreSQL
-```
-
-### 2. Microservices Boot
-*Run these in separate terminal multiplexer panes (e.g., tmux) or standard terminal windows.*
-
-**Pane 1: API Server**
 ```bash
 cd backend
-npm install
-cp .env.example .env
-npm run db:generate && npm run db:migrate
-npm run dev
+npm test
+npx prisma validate
+npx prisma migrate status
+
+cd ../frontend
+npm run build
 ```
 
-**Pane 2: Web Client**
-```bash
-cd frontend
-npm install
-npm run dev
-```
+The backend tests cover login-ID generation and salary calculation invariants. The production frontend build performs TypeScript and ESLint checks across every route.
 
-Access the application at `http://localhost:3001`.
+## Deployment Notes
 
-<br />
-
-<div align="center">
-  <sub>Engineered for the 8-Hour HRMS Hackathon. Built with discipline.</sub>
-</div>
+- Use a strong, externally managed `JWT_SECRET`.
+- Run `npm run db:deploy` during backend deployment, not `prisma migrate dev`.
+- Restrict `FRONTEND_ORIGIN` to the deployed web origin.
+- Terminate TLS at a reverse proxy or managed platform.
+- Back up PostgreSQL and test restore procedures before production use.
+- Do not use the seeded credentials outside local development.

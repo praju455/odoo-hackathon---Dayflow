@@ -6,6 +6,7 @@ const { z } = require("zod");
 const prisma = require("../db");
 const { generateLoginId, splitName } = require("../utils/loginId");
 const { formatZodError } = require("../utils/validation");
+const { seedDefaultLeaveAllocations } = require("../utils/leaveHelpers");
 
 const router = express.Router();
 
@@ -76,6 +77,12 @@ router.post("/", async (req, res, next) => {
           role: true,
         },
       });
+
+      await seedDefaultLeaveAllocations(
+        admin.id,
+        joiningDate.getUTCFullYear(),
+        tx,
+      );
 
       return { company, admin };
     });

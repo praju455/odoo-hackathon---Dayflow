@@ -6,6 +6,7 @@ const prisma = require("../db");
 const { authenticate, requireAdmin } = require("../middleware/auth");
 const { generateLoginId, splitName } = require("../utils/loginId");
 const { generateTempPassword } = require("../utils/password");
+const { seedDefaultLeaveAllocations } = require("../utils/leaveHelpers");
 const { toDirectoryUser, toUserProfile } = require("../utils/userResponse");
 const { formatZodError } = require("../utils/validation");
 
@@ -34,6 +35,14 @@ const updateEmployeeSchema = z.object({
   skills: z.array(z.string().trim().min(1)).optional(),
   certifications: z.array(z.string().trim().min(1)).optional(),
   interests: z.array(z.string().trim().min(1)).optional(),
+  dateOfBirth: z.string().date().nullable().optional(),
+  gender: z.string().trim().min(1).nullable().optional(),
+  maritalStatus: z.string().trim().min(1).nullable().optional(),
+  personalEmail: z.string().trim().email().nullable().optional(),
+  panCode: z.string().trim().min(1).nullable().optional(),
+  uanCode: z.string().trim().min(1).nullable().optional(),
+  accountNumber: z.string().trim().min(1).nullable().optional(),
+  homeAddress: z.string().trim().min(1).nullable().optional(),
 });
 
 router.get("/", authenticate, async (req, res, next) => {
@@ -143,6 +152,12 @@ router.post("/", authenticate, requireAdmin, async (req, res, next) => {
         },
       });
 
+      await seedDefaultLeaveAllocations(
+        employee.id,
+        joiningDate.getUTCFullYear(),
+        tx,
+      );
+
       return { employee, tempPassword };
     });
 
@@ -204,6 +219,9 @@ router.put("/:id", authenticate, requireAdmin, async (req, res, next) => {
       joiningDate: parsed.data.joiningDate
         ? new Date(`${parsed.data.joiningDate}T00:00:00.000Z`)
         : undefined,
+      dateOfBirth: parsed.data.dateOfBirth
+        ? new Date(`${parsed.data.dateOfBirth}T00:00:00.000Z`)
+        : parsed.data.dateOfBirth,
     };
 
     const user = await prisma.user.update({

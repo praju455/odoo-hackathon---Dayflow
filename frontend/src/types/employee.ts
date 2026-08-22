@@ -9,6 +9,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "ADMIN" | "EMPLOYEE";
+  mustChangePassword: boolean;
 }
 
 // ─── Employee / User ─────────────────────────────────────────────────────────
@@ -19,6 +20,8 @@ export interface DirectoryEmployee {
   name: string;
   profilePictureUrl: string | null;
   department: string | null;
+  jobTitle: string | null;
+  loginId: string;
   role: "ADMIN" | "EMPLOYEE";
 }
 
@@ -30,6 +33,14 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  maritalStatus: string | null;
+  personalEmail: string | null;
+  panCode: string | null;
+  uanCode: string | null;
+  accountNumber: string | null;
+  homeAddress: string | null;
   role: "ADMIN" | "EMPLOYEE";
   department: string | null;
   jobTitle: string | null;
@@ -45,26 +56,38 @@ export interface UserProfile {
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
 
-// TODO: replace mock with real API shape when Members 1&2 ship attendance routes
 export interface AttendanceRecord {
+  id: string;
   userId: string;
-  date: string; // YYYY-MM-DD
-  checkIn: string | null; // HH:mm
-  checkOut: string | null; // HH:mm
+  date: string;
+  checkIn: string | null;
+  checkOut: string | null;
+  workHours: number | string | null;
+  extraHours: number | string | null;
   status: "PRESENT" | "ABSENT" | "HALF_DAY";
+}
+
+export interface DayAttendanceRecord {
+  user: Pick<DirectoryEmployee, "id" | "loginId" | "name" | "department" | "jobTitle">;
+  status: "PRESENT" | "ABSENT" | "HALF_DAY" | "LEAVE";
+  attendance: AttendanceRecord | null;
 }
 
 // ─── Leave ───────────────────────────────────────────────────────────────────
 
-// TODO: replace mock with real API shape when Members 1&2 ship leave routes
 export interface LeaveRecord {
   id: string;
   userId: string;
-  leaveType: string;
-  startDate: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD
+  leaveType: "PAID" | "SICK" | "UNPAID";
+  startDate: string;
+  endDate: string;
+  allocationDays: number;
   status: "PENDING" | "APPROVED" | "REJECTED";
   reason: string | null;
+  attachmentUrl: string | null;
+  adminComment: string | null;
+  createdAt: string;
+  user?: Pick<DirectoryEmployee, "id" | "loginId" | "name" | "department">;
 }
 
 export interface LeaveAllocation {
@@ -78,4 +101,4 @@ export interface LeaveAllocation {
 
 // ─── Directory card status ────────────────────────────────────────────────────
 
-export type EmployeeStatus = "present" | "on-leave" | "absent";
+export type EmployeeStatus = "present" | "on-leave" | "absent" | "unknown";

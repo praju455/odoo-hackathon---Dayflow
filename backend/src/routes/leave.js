@@ -14,7 +14,7 @@ const { authenticate, requireAdmin } = require("../middleware/auth");
 const router = express.Router();
 
 function fail(res, status, message) {
-  return res.status(status).json({ success: false, message });
+  return res.status(status).json({ error: message });
 }
 
 // ─── GET /api/leave/allocations/me ──────────────────────────────────────────
@@ -49,8 +49,8 @@ router.get("/allocations/:userId", authenticate, requireAdmin, async (req, res, 
     const currentYear = new Date().getFullYear();
 
     // Verify the user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const user = await prisma.user.findFirst({
+      where: { id: userId, companyId: req.user.companyId },
       select: { id: true, loginId: true, name: true }
     });
 
@@ -83,6 +83,7 @@ router.post("/", authenticate, async (req, res, next) => {
       startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
       endDate:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
       reason:    z.string().optional(),
+      remarks:   z.string().optional(),
       attachmentUrl: z.string().optional(),
     });
 
@@ -91,7 +92,7 @@ router.post("/", authenticate, async (req, res, next) => {
       return fail(res, 400, parsed.error.errors[0].message);
     }
 
-    const { leaveType, startDate, endDate, reason, attachmentUrl } = parsed.data;
+    const { leaveType, startDate, endDate, reason, remarks, attachmentUrl } = parsed.data;
 
     // Validate dates
     const start = new Date(startDate);
@@ -133,7 +134,7 @@ router.post("/", authenticate, async (req, res, next) => {
         startDate: start,
         endDate: end,
         allocationDays,
-        reason,
+        reason: reason || remarks,
         attachmentUrl,
       }
     });
@@ -161,6 +162,18 @@ router.get("/requests/me", authenticate, async (req, res, next) => {
   }
 });
 
+router.get("/me", authenticate, async (req, res, next) => {
+  try {
+    const requests = await prisma.leaveRequest.findMany({
+      where: { userId: req.user.id },
+      orderBy: { createdAt: "desc" },
+    });
+    return res.json({ success: true, data: requests });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /api/leave/requests (admin) ────────────────────────────────────────
 /**
  * Returns all leave requests across the company.
@@ -169,6 +182,7 @@ router.get("/requests/me", authenticate, async (req, res, next) => {
 router.get("/requests", authenticate, requireAdmin, async (req, res, next) => {
   try {
     const requests = await prisma.leaveRequest.findMany({
+      where: { user: { companyId: req.user.companyId } },
       include: {
         user: {
           select: { id: true, loginId: true, name: true, department: true }
@@ -183,12 +197,27 @@ router.get("/requests", authenticate, requireAdmin, async (req, res, next) => {
   }
 });
 
+router.get("/", authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const requests = await prisma.leaveRequest.findMany({
+      where: { user: { companyId: req.user.companyId } },
+      include: {
+        user: { select: { id: true, loginId: true, name: true, department: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return res.json({ success: true, data: requests });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── PATCH /api/leave/requests/:id (admin) ──────────────────────────────────
 /**
  * Admin approves or rejects a leave request.
  * If APPROVED, we deduct the days from the employee's allocation.
  */
-router.patch("/requests/:id", authenticate, requireAdmin, async (req, res, next) => {
+async function updateLeaveStatus(req, res, next) {
   try {
     const { id } = req.params;
     
@@ -205,8 +234,8 @@ router.patch("/requests/:id", authenticate, requireAdmin, async (req, res, next)
     const { status, adminComment } = parsed.data;
 
     // Fetch the request
-    const leaveReq = await prisma.leaveRequest.findUnique({
-      where: { id }
+    const leaveReq = await prisma.leaveRequest.findFirst({
+      where: { id, user: { companyId: req.user.companyId } }
     });
 
     if (!leaveReq) {
@@ -275,6 +304,9 @@ router.patch("/requests/:id", authenticate, requireAdmin, async (req, res, next)
     }
     next(err);
   }
-});
+}
+
+router.patch("/requests/:id", authenticate, requireAdmin, updateLeaveStatus);
+router.put("/:id/status", authenticate, requireAdmin, updateLeaveStatus);
 
 module.exports = router;

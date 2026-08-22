@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { generatePayslip } from "@/utils/generatePayslip";
+import SalaryEditor from "@/components/admin/SalaryEditor";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +17,14 @@ interface UserProfile {
   name: string;
   email: string;
   phone: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  maritalStatus: string | null;
+  personalEmail: string | null;
+  panCode: string | null;
+  uanCode: string | null;
+  accountNumber: string | null;
+  homeAddress: string | null;
   role: "ADMIN" | "EMPLOYEE";
   department: string | null;
   jobTitle: string | null;
@@ -28,14 +38,7 @@ interface UserProfile {
   mustChangePassword: boolean;
 }
 
-// DEMO MOCK — These 8 fields are NOT in the backend User model (schema.prisma).
-// The selfUpdateSchema in users.js only accepts: phone, profilePictureUrl, about,
-// skills, certifications, interests.
-// TODO: Member 1 needs to add dateOfBirth, personalEmail, gender, maritalStatus,
-// panCode, uanCode, accountNumber, homeAddress to the User model + selfUpdateSchema
-// so they persist to Postgres. Until then they are stored in localStorage keyed
-// by `dayflow_private_${userId}` for demo purposes.
-interface PrivateLocalFields {
+interface PrivateFields {
   personalEmail: string;
   dateOfBirth: string;
   gender: string;
@@ -46,7 +49,7 @@ interface PrivateLocalFields {
   homeAddress: string;
 }
 
-const EMPTY_PRIVATE: PrivateLocalFields = {
+const EMPTY_PRIVATE: PrivateFields = {
   personalEmail: "",
   dateOfBirth: "",
   gender: "",
@@ -56,19 +59,6 @@ const EMPTY_PRIVATE: PrivateLocalFields = {
   accountNumber: "",
   homeAddress: "",
 };
-
-function loadLocalPrivate(userId: string): PrivateLocalFields {
-  try {
-    const raw = localStorage.getItem(`dayflow_private_${userId}`);
-    return raw ? { ...EMPTY_PRIVATE, ...JSON.parse(raw) } : EMPTY_PRIVATE;
-  } catch {
-    return EMPTY_PRIVATE;
-  }
-}
-
-function persistLocalPrivate(userId: string, fields: PrivateLocalFields) {
-  localStorage.setItem(`dayflow_private_${userId}`, JSON.stringify(fields));
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -283,11 +273,9 @@ export default function ProfilePage() {
   const [resumeOk,      setResumeOk]      = useState<string | null>(null);
 
   // ── Private Info form ─────────────────────────────────────────────────────
-  // Backend-persisted (confirmed in selfUpdateSchema)
   const [phone,             setPhone]             = useState("");
   const [profilePictureUrl, setProfilePictureUrl] = useState("");
-  // DEMO MOCK — localStorage-only (see PrivateLocalFields type above)
-  const [priv, setPriv] = useState<PrivateLocalFields>(EMPTY_PRIVATE);
+  const [priv, setPriv] = useState<PrivateFields>(EMPTY_PRIVATE);
   const [privateBusy, setPrivateBusy] = useState(false);
   const [privateErr,  setPrivateErr]  = useState<string | null>(null);
   const [privateOk,   setPrivateOk]   = useState<string | null>(null);
@@ -324,7 +312,16 @@ export default function ProfilePage() {
       setInterests(toString(p.interests));
       setPhone(p.phone ?? "");
       setProfilePictureUrl(p.profilePictureUrl ?? "");
-      setPriv(loadLocalPrivate(p.id));
+      setPriv({
+        personalEmail: p.personalEmail ?? "",
+        dateOfBirth: p.dateOfBirth?.slice(0, 10) ?? "",
+        gender: p.gender ?? "",
+        maritalStatus: p.maritalStatus ?? "",
+        panCode: p.panCode ?? "",
+        uanCode: p.uanCode ?? "",
+        accountNumber: p.accountNumber ?? "",
+        homeAddress: p.homeAddress ?? "",
+      });
 
       // Fetch manager's name if managerId is set.
       // GET /api/employees/:id → { employee: toUserProfile(user) } (confirmed from employees.js)
@@ -393,25 +390,37 @@ export default function ProfilePage() {
     setPrivateErr(null);
     setPrivateBusy(true);
     try {
-      // Backend-persisted fields: phone, profilePictureUrl
-      // Confirmed from selfUpdateSchema in users.js
       const { data } = await api.put<{ user: UserProfile }>("/users/me", {
         phone:             phone.trim() || undefined,
         profilePictureUrl: profilePictureUrl.trim() || undefined,
+        personalEmail: priv.personalEmail.trim() || undefined,
+        dateOfBirth: priv.dateOfBirth || undefined,
+        gender: priv.gender || undefined,
+        maritalStatus: priv.maritalStatus || undefined,
+        panCode: priv.panCode.trim() || undefined,
+        uanCode: priv.uanCode.trim() || undefined,
+        accountNumber: priv.accountNumber.trim() || undefined,
+        homeAddress: priv.homeAddress.trim() || undefined,
       });
       const p = data.user;
-      setProfile((prev) => (prev ? { ...prev, phone: p.phone, profilePictureUrl: p.profilePictureUrl } : prev));
+      setProfile(p);
       setPhone(p.phone ?? "");
       setProfilePictureUrl(p.profilePictureUrl ?? "");
+      setPriv({
+        personalEmail: p.personalEmail ?? "",
+        dateOfBirth: p.dateOfBirth?.slice(0, 10) ?? "",
+        gender: p.gender ?? "",
+        maritalStatus: p.maritalStatus ?? "",
+        panCode: p.panCode ?? "",
+        uanCode: p.uanCode ?? "",
+        accountNumber: p.accountNumber ?? "",
+        homeAddress: p.homeAddress ?? "",
+      });
 
       // Propagate avatar change to nav shell
       if (authUser) {
         setAuthUser({ ...authUser, profilePictureUrl: p.profilePictureUrl ?? undefined });
       }
-
-      // DEMO MOCK: persist non-schema fields to localStorage
-      // TODO: see PrivateLocalFields comment at top of file
-      if (profile) persistLocalPrivate(profile.id, priv);
 
       setPrivateOk("Private info saved.");
     } catch (err) {
@@ -484,7 +493,8 @@ export default function ProfilePage() {
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700
           flex items-center justify-center ring-4 ring-indigo-500/20 overflow-hidden shrink-0">
           {profile.profilePictureUrl ? (
-            <img src={profile.profilePictureUrl} alt={profile.name}
+            <Image src={profile.profilePictureUrl} alt={profile.name}
+              width={80} height={80} unoptimized
               className="w-full h-full object-cover" />
           ) : (
             <span className="text-3xl font-bold text-white select-none">{initials}</span>
@@ -610,15 +620,13 @@ export default function ProfilePage() {
             </div>
           </SectionCard>
 
-          {/* Personal — phone saves to backend; rest are DEMO MOCK (localStorage) */}
+          {/* Personal information */}
           <SectionCard title="Personal Information">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Phone — confirmed in selfUpdateSchema, backend-persisted */}
               <Field id="phone" label="Phone Number" type="tel"
                 value={phone} onChange={setPhone}
                 placeholder="+91 98765 43210" />
 
-              {/* DEMO MOCK fields below — localStorage only, see PrivateLocalFields */}
               <Field id="personalEmail" label="Personal Email" type="email"
                 value={priv.personalEmail}
                 onChange={(v) => setPriv((p) => ({ ...p, personalEmail: v }))}
@@ -649,7 +657,7 @@ export default function ProfilePage() {
             </div>
           </SectionCard>
 
-          {/* Official IDs — DEMO MOCK (localStorage) */}
+          {/* Official IDs */}
           <SectionCard title="Official Details">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field id="panCode" label="PAN Code"
@@ -667,7 +675,7 @@ export default function ProfilePage() {
             </div>
           </SectionCard>
 
-          {/* Address — DEMO MOCK (localStorage) */}
+          {/* Address */}
           <SectionCard title="Address">
             <Field id="homeAddress" label="Home Address" rows={3}
               value={priv.homeAddress}
@@ -682,7 +690,8 @@ export default function ProfilePage() {
               placeholder="https://example.com/your-photo.jpg" />
             {profilePictureUrl && (
               <div className="mt-3 flex items-center gap-3">
-                <img src={profilePictureUrl} alt="Preview"
+                <Image src={profilePictureUrl} alt="Preview"
+                  width={48} height={48} unoptimized
                   className="w-12 h-12 rounded-xl object-cover ring-2 ring-indigo-500/30" />
                 <p className="text-xs text-slate-500">Preview</p>
               </div>
@@ -747,22 +756,10 @@ export default function ProfilePage() {
         </form>
       )}
 
-      {/* ════════ SALARY INFO TAB (ADMIN only) — placeholder for Member 4 ════════ */}
+      {/* ════════ SALARY INFO TAB (ADMIN only) ════════ */}
       {activeTab === "salary" && isAdmin && (
-        <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-10 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20
-            flex items-center justify-center mx-auto mb-5">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-              className="w-7 h-7 text-amber-400" aria-hidden="true">
-              <path d="M12 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" />
-              <path fillRule="evenodd" d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 14.625v-9.75zM8.25 9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM18.75 9a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75V9.75a.75.75 0 00-.75-.75h-.008zM4.5 9.75A.75.75 0 015.25 9h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75V9.75z" clipRule="evenodd" />
-              <path d="M2.25 18a.75.75 0 000 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 00-.75-.75H2.25z" />
-            </svg>
-          </div>
-          <h2 className="text-base font-semibold text-white mb-2">Salary Information</h2>
-          <p className="text-slate-500 text-sm max-w-xs mx-auto leading-relaxed">
-            The full salary editor — wage type, components, PF, and professional tax — is built by Member 4 and will appear in this tab when viewing any employee&apos;s profile as an admin.
-          </p>
+        <div className="rounded-2xl bg-white p-6">
+          <SalaryEditor employeeId={profile.id} />
         </div>
       )}
     </div>

@@ -201,11 +201,7 @@ function NewRequestModal({ onClose, onSuccess, allocations }: ModalProps) {
   const [startDate, setStartDate]         = useState("");
   const [endDate,   setEndDate]           = useState("");
   const [reason,    setReason]            = useState("");
-  // DEMO NOTE: Backend stores attachmentUrl as a plain string (no file upload endpoint exists).
-  // For SICK leave, we capture the selected filename here via file input.
-  // This satisfies the backend's `attachmentUrl` string requirement.
-  // TODO: Member 1/2 to add a real file upload endpoint (e.g. POST /api/upload)
-  // and replace this with the returned URL.
+  // The current backend contract stores the selected medical-document filename.
   const [attachmentName, setAttachmentName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -405,7 +401,7 @@ function NewRequestModal({ onClose, onSuccess, allocations }: ModalProps) {
               </label>
               {/* File input: reads filename into attachmentName.
                   The backend stores attachmentUrl as a plain string — no upload endpoint.
-                  TODO: Replace with real upload once Member 1/2 adds POST /api/upload */}
+                  The selected filename is attached to the leave request. */}
               <div
                 onClick={() => fileRef.current?.click()}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer

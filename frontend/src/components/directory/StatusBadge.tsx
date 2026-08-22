@@ -32,6 +32,11 @@ const config: Record<
     label: "Absent",
     ring: "ring-yellow-100",
   },
+  unknown: {
+    dot: "bg-gray-300",
+    label: "Status visible to admins",
+    ring: "ring-gray-100",
+  },
 };
 
 export default function StatusBadge({

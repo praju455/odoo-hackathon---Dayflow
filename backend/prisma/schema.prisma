@@ -38,6 +38,12 @@ enum LeaveRequestStatus {
   REJECTED
 }
 
+enum LeaveType {
+  PAID
+  SICK
+  UNPAID
+}
+
 // Member 2 enum for wage period
 enum WageType {
   MONTHLY
@@ -46,8 +52,8 @@ enum WageType {
 
 // Member 2 enum for salary component calculation type
 enum ComponentType {
-  FIXED            // calculatedAmount = value (raw rupee amount)
-  PERCENT_OF_WAGE  // calculatedAmount = value% of fixedWage
+  FIXED // calculatedAmount = value (raw rupee amount)
+  PERCENT_OF_WAGE // calculatedAmount = value% of fixedWage
   PERCENT_OF_BASIC // calculatedAmount = value% of Basic component's calculatedAmount
 }
 
@@ -95,9 +101,9 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  manager          User?             @relation("UserManager", fields: [managerId], references: [id])
-  reports          User[]            @relation("UserManager")
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  manager User?   @relation("UserManager", fields: [managerId], references: [id])
+  reports User[]  @relation("UserManager")
 
   // Member 2 relations
   attendance       Attendance[]
@@ -122,18 +128,18 @@ model User {
 model Attendance {
   id         String           @id @default(uuid())
   userId     String
-  date       DateTime         @db.Date   // store only the calendar date
-  checkIn    DateTime?                   // full timestamp set on check-in
-  checkOut   DateTime?                   // full timestamp set on check-out
-  workHours  Float?                      // decimal hours: (checkOut - checkIn)
-  extraHours Float?                      // hours beyond standard 8-hour day
+  date       DateTime         @db.Date // store only the calendar date
+  checkIn    DateTime? // full timestamp set on check-in
+  checkOut   DateTime? // full timestamp set on check-out
+  workHours  Float? // decimal hours: (checkOut - checkIn)
+  extraHours Float? // hours beyond standard 8-hour day
   status     AttendanceStatus @default(ABSENT)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, date])  // one record per employee per calendar day
+  @@unique([userId, date]) // one record per employee per calendar day
   @@index([userId])
 }
 
@@ -146,18 +152,18 @@ model Attendance {
 // ─────────────────────────────────────────
 
 model LeaveAllocation {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  leaveType String   // "PAID" | "SICK" | "UNPAID"
-  totalDays Int      // annual entitlement
-  usedDays  Int      @default(0)
-  year      Int      // e.g. 2026
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  leaveType LeaveType
+  totalDays Int // annual entitlement
+  usedDays  Int       @default(0)
+  year      Int // e.g. 2026
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, leaveType, year])  // one record per type per year
+  @@unique([userId, leaveType, year]) // one record per type per year
   @@index([userId])
 }
 
@@ -172,14 +178,14 @@ model LeaveAllocation {
 model LeaveRequest {
   id             String             @id @default(uuid())
   userId         String
-  leaveType      String             // "PAID" | "SICK" | "UNPAID"
+  leaveType      LeaveType
   startDate      DateTime           @db.Date
   endDate        DateTime           @db.Date
-  allocationDays Int                // (endDate - startDate) + 1, computed on create
-  reason         String?            // optional employee remarks
-  attachmentUrl  String?            // filename/path only; soft-required for SICK leave
+  allocationDays Int // (endDate - startDate) + 1, computed on create
+  reason         String? // optional employee remarks
+  attachmentUrl  String? // filename/path only; soft-required for SICK leave
   status         LeaveRequestStatus @default(PENDING)
-  adminComment   String?            // set by admin on approve/reject
+  adminComment   String? // set by admin on approve/reject
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
@@ -196,17 +202,17 @@ model LeaveRequest {
 // ─────────────────────────────────────────
 
 model SalaryStructure {
-  id                String    @id @default(uuid())
-  userId            String    @unique  // one structure per employee
-  wageType          WageType  @default(MONTHLY)
-  fixedWage         Float     // gross wage (monthly or yearly)
-  pfEmployeePercent Float     @default(12)  // % of Basic deducted from employee
-  pfEmployerPercent Float     @default(12)  // % of Basic contributed by employer
-  professionalTax   Float     @default(200) // flat monthly deduction (₹)
-  effectiveFrom     DateTime  @default(now())
+  id                String            @id @default(uuid())
+  userId            String            @unique // one structure per employee
+  wageType          WageType          @default(MONTHLY)
+  fixedWage         Float // gross wage (monthly or yearly)
+  pfEmployeePercent Float             @default(12) // % of Basic deducted from employee
+  pfEmployerPercent Float             @default(12) // % of Basic contributed by employer
+  professionalTax   Float             @default(200) // flat monthly deduction (₹)
+  effectiveFrom     DateTime          @default(now())
   components        SalaryComponent[]
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -223,9 +229,9 @@ model SalaryStructure {
 model SalaryComponent {
   id                String        @id @default(uuid())
   salaryStructureId String
-  name              String        // e.g. "Basic", "HRA", "Performance Bonus"
+  name              String // e.g. "Basic", "HRA", "Performance Bonus"
   compType          ComponentType
-  value             Float         // raw amount (FIXED) or percentage number (PERCENT_*)
+  value             Float // raw amount (FIXED) or percentage number (PERCENT_*)
   calculatedAmount  Float         @default(0) // always recomputed on save; never set manually
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

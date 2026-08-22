@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
-import type { DirectoryEmployee, AttendanceRecord } from "@/types/employee";
+import type { DayAttendanceRecord, DirectoryEmployee } from "@/types/employee";
 import Avatar from "@/components/ui/Avatar";
 
 // ─── Date Helpers ─────────────────────────────────────────────────────────────
@@ -27,32 +27,21 @@ function formatDisplayDate(isoDate: string, showDayOfWeek: boolean) {
 
 // ─── Time Helpers ─────────────────────────────────────────────────────────────
 
-function calculateHours(checkIn: string | null, checkOut: string | null) {
-  if (!checkIn || !checkOut) return { workHours: "-", extraHours: "-" };
-  
-  // Assuming HH:mm format
-  const [inH, inM] = checkIn.split(":").map(Number);
-  const [outH, outM] = checkOut.split(":").map(Number);
-  
-  const totalMinutes = (outH * 60 + outM) - (inH * 60 + inM);
-  if (totalMinutes <= 0) return { workHours: "0h", extraHours: "0h" };
+function formatTime(value: string | null | undefined) {
+  if (!value) return "-";
+  return new Date(value).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  
-  // Typical standard hours is 8 hours per day
-  const STANDARD_MINUTES = 8 * 60;
-  
-  let extraMins = totalMinutes - STANDARD_MINUTES;
-  if (extraMins < 0) extraMins = 0;
-  
-  const extraH = Math.floor(extraMins / 60);
-  const extraM = extraMins % 60;
-  
-  return {
-    workHours: `${hours}h ${mins}m`,
-    extraHours: extraMins > 0 ? `${extraH}h ${extraM}m` : "-",
-  };
+function formatHours(value: number | string | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  const hours = Number(value);
+  if (!Number.isFinite(hours)) return "-";
+  const whole = Math.floor(hours);
+  const minutes = Math.round((hours - whole) * 60);
+  return `${whole}h ${minutes}m`;
 }
 
 export default function AdminAttendancePage() {
@@ -61,7 +50,8 @@ export default function AdminAttendancePage() {
   const [search, setSearch] = useState("");
   
   const [employees, setEmployees] = useState<DirectoryEmployee[]>([]);
-  const [attendance, setAttendance] = useState<Record<string, AttendanceRecord>>({});
+  const [dayRecords, setDayRecords] = useState<Record<string, DayAttendanceRecord>>({});
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ─── Data Fetching ──────────────────────────────────────────────────────────
@@ -69,33 +59,21 @@ export default function AdminAttendancePage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      setError(null);
       try {
-        // 1. Fetch all employees
-        const empRes = await api.get<{ employees: DirectoryEmployee[] }>("/employees");
+        const [empRes, attendanceRes] = await Promise.all([
+          api.get<{ employees: DirectoryEmployee[] }>("/employees"),
+          api.get<{ data: DayAttendanceRecord[] }>(`/attendance/day?date=${date}`),
+        ]);
         setEmployees(empRes.data.employees);
-
-        // 2. Fetch attendance for specific date
-        // TODO: replace mock with real API when Members 1&2 ship attendance routes
-        let attData: AttendanceRecord[] = [];
-        try {
-          const attRes = await api.get<{ attendance: AttendanceRecord[] }>(`/attendance?date=${date}`);
-          attData = attRes.data.attendance || [];
-        } catch (e) {
-          // Fallback to rich mock for demo
-          attData = [
-            { id: "a1", userId: "emp-101", date, status: "PRESENT", checkIn: "09:02", checkOut: "17:15" },
-            { id: "a2", userId: "emp-102", date, status: "PRESENT", checkIn: "08:50", checkOut: "18:00" },
-            { id: "a3", userId: "emp-103", date, status: "HALF_DAY", checkIn: "09:30", checkOut: "13:00" },
-          ]; // TODO: replace mock with real API
-        }
-        
-        // Map attendance by userId for quick lookup
-        const attMap: Record<string, AttendanceRecord> = {};
-        attData.forEach(a => { attMap[a.userId] = a; });
-        setAttendance(attMap);
-        
-      } catch (err) {
-        console.error("Failed to fetch attendance data", err);
+        setDayRecords(Object.fromEntries(
+          attendanceRes.data.data.map((record) => [record.user.id, record]),
+        ));
+      } catch (err: unknown) {
+        setError(
+          (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            ?? "Failed to load attendance data.",
+        );
       } finally {
         setLoading(false);
       }
@@ -171,6 +149,11 @@ export default function AdminAttendancePage() {
       </div>
 
       {/* Table */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
@@ -195,8 +178,9 @@ export default function AdminAttendancePage() {
                 </tr>
               ) : (
                 filteredEmployees.map(emp => {
-                  const record = attendance[emp.id];
-                  const { workHours, extraHours } = calculateHours(record?.checkIn || null, record?.checkOut || null);
+                  const dayRecord = dayRecords[emp.id];
+                  const record = dayRecord?.attendance;
+                  const status = dayRecord?.status ?? "ABSENT";
                   
                   return (
                     <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
@@ -207,13 +191,17 @@ export default function AdminAttendancePage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {record?.status === "PRESENT" ? (
+                        {status === "PRESENT" ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
                             <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span> Present
                           </span>
-                        ) : record?.status === "HALF_DAY" ? (
+                        ) : status === "HALF_DAY" ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
                             <span className="h-1.5 w-1.5 rounded-full bg-yellow-500"></span> Half Day
+                          </span>
+                        ) : status === "LEAVE" ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700">
+                            On Leave
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
@@ -221,10 +209,10 @@ export default function AdminAttendancePage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-mono text-gray-700">{record?.checkIn || "-"}</td>
-                      <td className="px-6 py-4 font-mono text-gray-700">{record?.checkOut || "-"}</td>
-                      <td className="px-6 py-4 font-medium text-gray-900">{workHours}</td>
-                      <td className="px-6 py-4 text-orange-600">{extraHours}</td>
+                      <td className="px-6 py-4 font-mono text-gray-700">{formatTime(record?.checkIn)}</td>
+                      <td className="px-6 py-4 font-mono text-gray-700">{formatTime(record?.checkOut)}</td>
+                      <td className="px-6 py-4 font-medium text-gray-900">{formatHours(record?.workHours)}</td>
+                      <td className="px-6 py-4 text-orange-600">{formatHours(record?.extraHours)}</td>
                     </tr>
                   );
                 })

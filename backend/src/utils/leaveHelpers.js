@@ -12,14 +12,18 @@ const prisma = require("../lib/prisma");
  * @param {string} userId - The ID of the newly created user
  * @param {number} year - The calendar year for this allocation (defaults to current year)
  */
-async function seedDefaultLeaveAllocations(userId, year = new Date().getFullYear()) {
+async function seedDefaultLeaveAllocations(
+  userId,
+  year = new Date().getFullYear(),
+  client = prisma,
+) {
   const allocations = [
     { userId, leaveType: "PAID", totalDays: 24, usedDays: 0, year },
     { userId, leaveType: "SICK", totalDays: 7, usedDays: 0, year },
     { userId, leaveType: "UNPAID", totalDays: 9999, usedDays: 0, year },
   ];
 
-  await prisma.leaveAllocation.createMany({
+  await client.leaveAllocation.createMany({
     data: allocations,
     skipDuplicates: true, // Prevent errors if allocations already exist for this year
   });

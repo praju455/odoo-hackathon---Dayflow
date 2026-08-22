@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -242,9 +243,12 @@ export default function NavShell() {
             >
               {/* Avatar image or initial */}
               {user?.profilePictureUrl ? (
-                <img
+                <Image
                   src={user.profilePictureUrl}
                   alt={user.name}
+                  width={32}
+                  height={32}
+                  unoptimized
                   className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500/40"
                 />
               ) : (

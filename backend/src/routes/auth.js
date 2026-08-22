@@ -5,6 +5,7 @@ const { z } = require("zod");
 
 const prisma = require("../db");
 const { authenticate } = require("../middleware/auth");
+const { toUserProfile } = require("../utils/userResponse");
 const { formatZodError } = require("../utils/validation");
 
 const router = express.Router();
@@ -62,13 +63,7 @@ router.post("/login", async (req, res, next) => {
     return res.json({
       token: signUserToken(user),
       mustChangePassword: user.mustChangePassword,
-      user: {
-        id: user.id,
-        loginId: user.loginId,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: toUserProfile(user),
     });
   } catch (err) {
     next(err);

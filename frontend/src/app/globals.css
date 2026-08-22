@@ -4,10 +4,9 @@
 
 /* ─── Design tokens (shared with Member 3) ─────────────────────────────────── */
 :root {
-<<<<<<< HEAD
   --background: #0f172a; /* Tailwind slate-900 */
   --foreground: #f8fafc; /* Tailwind slate-50 */
-=======
+
   /* Brand */
   --color-primary: #4f46e5;       /* indigo-600 */
   --color-primary-hover: #4338ca; /* indigo-700 */
@@ -27,20 +26,14 @@
   --color-text-primary: #111827;   /* gray-900 */
   --color-text-secondary: #6b7280; /* gray-500 */
   --color-text-muted: #9ca3af;     /* gray-400 */
->>>>>>> 36018d7dffbeb7822d439059207690d3548a9668
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
 body {
-<<<<<<< HEAD
-  color: var(--foreground);
-  background: var(--background);
-=======
   font-family: var(--font-inter), system-ui, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
->>>>>>> 36018d7dffbeb7822d439059207690d3548a9668
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────────────── */

@@ -1,6 +1,7 @@
 // src/middleware/auth.js
 // JWT auth middleware — aligned with Member 1's User schema.
-// Token payload: { id, loginId, role, companyId }
+// Accept both the original Member 1 `userId` claim and the early Member 2 `id`
+// claim, then expose a single normalized shape to every route.
 
 const jwt = require("jsonwebtoken");
 
@@ -17,10 +18,14 @@ function authenticate(req, res, next) {
   const token = header.split(" ")[1];
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // { id, loginId, role, companyId }
+    const userId = payload.userId || payload.id;
+    if (!userId || !payload.companyId || !payload.role) {
+      return res.status(401).json({ error: "Invalid access token" });
+    }
+    req.user = { ...payload, id: userId, userId };
     next();
   } catch {
-    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
 
@@ -31,7 +36,7 @@ function authenticate(req, res, next) {
  */
 function requireAdmin(req, res, next) {
   if (req.user?.role !== "ADMIN") {
-    return res.status(403).json({ success: false, message: "Admin access required" });
+    return res.status(403).json({ error: "Admin access required" });
   }
   next();
 }

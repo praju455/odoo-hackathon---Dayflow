@@ -1,199 +1,187 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 
-type SalaryInfo = {
-  baseSalary: number;
-  currency: string;
-  bonus: number;
-  effectiveDate: string;
+type WageType = "MONTHLY" | "YEARLY";
+type ComponentType = "FIXED" | "PERCENT_OF_WAGE" | "PERCENT_OF_BASIC";
+interface SalaryComponent { name: string; compType: ComponentType; value: number; }
+interface SalaryForm {
+  wageType: WageType;
+  fixedWage: number;
+  pfEmployeePercent: number;
+  pfEmployerPercent: number;
+  professionalTax: number;
+  components: SalaryComponent[];
+}
+interface SalaryResponse {
+  data: {
+    structure: SalaryForm & { components: Array<SalaryComponent & { calculatedAmount: number | string }> };
+    breakdown: SalaryBreakdown;
+  };
+}
+interface SalaryBreakdown {
+  basicAmount: number;
+  grossEarnings: number;
+  unallocatedWage: number;
+  netSalary: number;
+  deductions: { pfEmployee: number; pfEmployer: number; professionalTax: number; totalDeductions: number };
+}
+
+const EMPTY_SALARY: SalaryForm = {
+  wageType: "MONTHLY",
+  fixedWage: 0,
+  pfEmployeePercent: 12,
+  pfEmployerPercent: 12,
+  professionalTax: 200,
+  components: [
+    { name: "Basic", compType: "PERCENT_OF_WAGE", value: 50 },
+    { name: "HRA", compType: "PERCENT_OF_BASIC", value: 40 },
+  ],
 };
 
+function errorMessage(error: unknown) {
+  return (error as { response?: { data?: { error?: string } } })?.response?.data?.error
+    ?? "Unable to save salary structure.";
+}
+
+function amountFor(component: SalaryComponent, wage: number, basicAmount: number) {
+  if (component.compType === "FIXED") return component.value;
+  if (component.compType === "PERCENT_OF_WAGE") return wage * component.value / 100;
+  return basicAmount * component.value / 100;
+}
+
+function money(value: number) {
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(value || 0);
+}
+
 export default function SalaryEditor({ employeeId }: { employeeId: string }) {
+  const [form, setForm] = useState<SalaryForm>(EMPTY_SALARY);
+  const [savedBreakdown, setSavedBreakdown] = useState<SalaryBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const [salary, setSalary] = useState<SalaryInfo>({
-    baseSalary: 0,
-    currency: "USD",
-    bonus: 0,
-    effectiveDate: new Date().toISOString().split("T")[0],
-  });
-
   useEffect(() => {
-    async function fetchSalary() {
+    async function load() {
       setLoading(true);
+      setError(null);
       try {
-        // TODO: replace with real API `GET /api/employees/${employeeId}/salary`
-        let data: SalaryInfo | null = null;
-        try {
-          const res = await api.get<{ salary: SalaryInfo }>(`/employees/${employeeId}/salary`);
-          data = res.data.salary;
-        } catch (err) {
-          // Fallback to mock data if endpoint is missing
-          data = {
-            baseSalary: 75000,
-            currency: "USD",
-            bonus: 5000,
-            effectiveDate: "2026-01-01",
-          };
-        }
-        
-        if (data) {
-          setSalary(data);
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load salary info");
+        const response = await api.get<SalaryResponse>(`/salary/${employeeId}`);
+        const structure = response.data.data.structure;
+        setForm({
+          wageType: structure.wageType,
+          fixedWage: Number(structure.fixedWage),
+          pfEmployeePercent: Number(structure.pfEmployeePercent),
+          pfEmployerPercent: Number(structure.pfEmployerPercent),
+          professionalTax: Number(structure.professionalTax),
+          components: structure.components.map((component) => ({
+            name: component.name,
+            compType: component.compType,
+            value: Number(component.value),
+          })),
+        });
+        setSavedBreakdown(response.data.data.breakdown);
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 404) setError(errorMessage(err));
+        setForm(EMPTY_SALARY);
       } finally {
         setLoading(false);
       }
     }
-    
-    fetchSalary();
+    void load();
   }, [employeeId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const preview = useMemo(() => {
+    const basic = form.components.find((component) => component.name.trim().toLowerCase() === "basic");
+    const basicAmount = basic
+      ? (basic.compType === "PERCENT_OF_BASIC" ? 0 : amountFor(basic, form.fixedWage, 0))
+      : 0;
+    const calculated = form.components.map((component) => ({
+      ...component,
+      calculatedAmount: amountFor(component, form.fixedWage, basicAmount),
+    }));
+    const total = calculated.reduce((sum, component) => sum + component.calculatedAmount, 0);
+    return { basic, basicAmount, calculated, total, exceedsWage: total > form.fixedWage };
+  }, [form]);
+
+  function updateComponent(index: number, patch: Partial<SalaryComponent>) {
+    setForm((current) => ({
+      ...current,
+      components: current.components.map((component, i) => i === index ? { ...component, ...patch } : component),
+    }));
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
     setSuccess(false);
-
-    if (salary.baseSalary <= 0) {
-      setError("Base salary must be greater than 0.");
-      setSaving(false);
-      return;
+    if (!preview.basic) return setError("A component named Basic is required.");
+    if (preview.basic.compType === "PERCENT_OF_BASIC") return setError("Basic cannot be a percentage of itself.");
+    if (preview.exceedsWage) return setError("Component total cannot exceed the fixed wage.");
+    if (new Set(form.components.map((component) => component.name.trim().toLowerCase())).size !== form.components.length) {
+      return setError("Component names must be unique.");
     }
-    
-    if (salary.bonus < 0) {
-      setError("Bonus cannot be negative.");
-      setSaving(false);
-      return;
-    }
-
+    setSaving(true);
     try {
-      // TODO: replace with real API `PATCH /api/employees/${employeeId}/salary`
-      // await api.patch(`/employees/${employeeId}/salary`, salary);
-      
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 600));
+      const response = await api.put<SalaryResponse>(`/salary/${employeeId}`, form);
+      setSavedBreakdown(response.data.data.breakdown);
       setSuccess(true);
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      setError(err.message || "Failed to save salary info");
+    } catch (err) {
+      setError(errorMessage(err));
     } finally {
       setSaving(false);
     }
-  };
-
-  if (loading) {
-    return <div className="animate-pulse flex space-x-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></div>;
   }
 
+  if (loading) return <p className="text-sm text-gray-400">Loading salary structure...</p>;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 border border-red-200">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-      
-      {success && (
-        <div className="rounded-md bg-green-50 p-4 border border-green-200">
-          <p className="text-sm text-green-700 font-medium">Salary information updated successfully.</p>
-        </div>
-      )}
+    <form onSubmit={submit} className="space-y-6">
+      {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+      {success && <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">Salary structure saved.</div>}
 
-      <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-        <div className="sm:col-span-1">
-          <label htmlFor="baseSalary" className="block text-sm font-medium text-gray-700">
-            Base Salary
-          </label>
-          <div className="mt-1 relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">$</span>
-            </div>
-            <input
-              type="number"
-              name="baseSalary"
-              id="baseSalary"
-              min="1"
-              required
-              className="block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-2 border outline-none"
-              placeholder="0.00"
-              value={salary.baseSalary || ""}
-              onChange={(e) => setSalary({ ...salary, baseSalary: Number(e.target.value) })}
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center">
-              <label htmlFor="currency" className="sr-only">Currency</label>
-              <select
-                id="currency"
-                name="currency"
-                className="h-full py-0 pl-2 pr-7 border-transparent bg-transparent text-gray-500 sm:text-sm rounded-md focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                value={salary.currency}
-                onChange={(e) => setSalary({ ...salary, currency: e.target.value })}
-              >
-                <option>USD</option>
-                <option>EUR</option>
-                <option>GBP</option>
-                <option>INR</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="sm:col-span-1">
-          <label htmlFor="bonus" className="block text-sm font-medium text-gray-700">
-            Annual Bonus Target
-          </label>
-          <div className="mt-1 relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">$</span>
-            </div>
-            <input
-              type="number"
-              name="bonus"
-              id="bonus"
-              min="0"
-              className="block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-2 border outline-none"
-              placeholder="0.00"
-              value={salary.bonus === 0 ? "" : salary.bonus}
-              onChange={(e) => setSalary({ ...salary, bonus: Number(e.target.value) })}
-            />
-          </div>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor="effectiveDate" className="block text-sm font-medium text-gray-700">
-            Effective Date
-          </label>
-          <div className="mt-1">
-            <input
-              type="date"
-              name="effectiveDate"
-              id="effectiveDate"
-              required
-              className="block w-full sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3 border outline-none"
-              value={salary.effectiveDate}
-              onChange={(e) => setSalary({ ...salary, effectiveDate: e.target.value })}
-            />
-          </div>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-sm font-medium text-gray-700">Wage type
+          <select value={form.wageType} onChange={(event) => setForm({ ...form, wageType: event.target.value as WageType })} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2">
+            <option value="MONTHLY">Monthly</option><option value="YEARLY">Yearly</option>
+          </select>
+        </label>
+        <label className="text-sm font-medium text-gray-700">Fixed wage (INR)
+          <input type="number" min="1" required value={form.fixedWage || ""} onChange={(event) => setForm({ ...form, fixedWage: Number(event.target.value) })} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2" />
+        </label>
       </div>
 
-      <div className="pt-4 flex justify-end border-t border-gray-100">
-        <button
-          type="submit"
-          disabled={saving}
-          className="btn-primary"
-        >
-          {saving ? "Saving..." : "Save Salary Info"}
-        </button>
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900">Earning components</h3>
+          <button type="button" onClick={() => setForm({ ...form, components: [...form.components, { name: "", compType: "FIXED", value: 0 }] })} className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Add component</button>
+        </div>
+        <div className="space-y-3">
+          {preview.calculated.map((component, index) => (
+            <div key={index} className="grid gap-3 rounded-lg border border-gray-200 p-3 sm:grid-cols-[1.2fr_1.4fr_0.8fr_1fr_auto] sm:items-end">
+              <label className="text-xs text-gray-500">Name<input required value={component.name} onChange={(event) => updateComponent(index, { name: event.target.value })} className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm" /></label>
+              <label className="text-xs text-gray-500">Calculation<select value={component.compType} onChange={(event) => updateComponent(index, { compType: event.target.value as ComponentType })} className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"><option value="FIXED">Fixed</option><option value="PERCENT_OF_WAGE">% of wage</option><option value="PERCENT_OF_BASIC">% of Basic</option></select></label>
+              <label className="text-xs text-gray-500">Value<input type="number" min="0" step="0.01" required value={component.value} onChange={(event) => updateComponent(index, { value: Number(event.target.value) })} className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm" /></label>
+              <div><p className="text-xs text-gray-500">Amount</p><p className="py-2 text-sm font-semibold text-gray-900">INR {money(component.calculatedAmount)}</p></div>
+              <button type="button" title="Remove component" aria-label="Remove component" disabled={form.components.length === 1} onClick={() => setForm({ ...form, components: form.components.filter((_, i) => i !== index) })} className="h-9 w-9 rounded-md border border-gray-300 text-lg text-gray-500 disabled:opacity-30">×</button>
+            </div>
+          ))}
+        </div>
+        <div className={`mt-3 flex justify-between rounded-lg px-4 py-3 text-sm font-semibold ${preview.exceedsWage ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-900"}`}><span>Component total</span><span>INR {money(preview.total)} / {money(form.fixedWage)}</span></div>
       </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="text-sm font-medium text-gray-700">Employee PF %<input type="number" min="0" max="100" value={form.pfEmployeePercent} onChange={(event) => setForm({ ...form, pfEmployeePercent: Number(event.target.value) })} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2" /></label>
+        <label className="text-sm font-medium text-gray-700">Employer PF %<input type="number" min="0" max="100" value={form.pfEmployerPercent} onChange={(event) => setForm({ ...form, pfEmployerPercent: Number(event.target.value) })} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2" /></label>
+        <label className="text-sm font-medium text-gray-700">Professional tax<input type="number" min="0" value={form.professionalTax} onChange={(event) => setForm({ ...form, professionalTax: Number(event.target.value) })} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2" /></label>
+      </div>
+
+      {savedBreakdown && <div className="grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-4 text-sm sm:grid-cols-4"><div><p className="text-gray-500">Basic</p><p className="font-semibold">INR {money(Number(savedBreakdown.basicAmount))}</p></div><div><p className="text-gray-500">Gross</p><p className="font-semibold">INR {money(Number(savedBreakdown.grossEarnings))}</p></div><div><p className="text-gray-500">Deductions</p><p className="font-semibold">INR {money(Number(savedBreakdown.deductions.totalDeductions))}</p></div><div><p className="text-gray-500">Net</p><p className="font-semibold">INR {money(Number(savedBreakdown.netSalary))}</p></div></div>}
+
+      <div className="flex justify-end border-t border-gray-100 pt-4"><button type="submit" disabled={saving || preview.exceedsWage} className="btn-primary disabled:opacity-50">{saving ? "Saving..." : "Save salary structure"}</button></div>
     </form>
   );
 }

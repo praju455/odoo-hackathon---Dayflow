@@ -30,7 +30,7 @@ function todayUTC() {
  * Build a standard error response (matches Member 1's shape).
  */
 function fail(res, status, message) {
-  return res.status(status).json({ success: false, message });
+  return res.status(status).json({ error: message });
 }
 
 // ─── POST /api/attendance/checkin ───────────────────────────────────────────
@@ -192,7 +192,7 @@ router.get("/today", authenticate, requireAdmin, async (req, res, next) => {
     const today = todayUTC();
 
     const records = await prisma.attendance.findMany({
-      where: { date: today },
+      where: { date: today, user: { companyId: req.user.companyId } },
       include: {
         user: {
           select: { id: true, loginId: true, name: true, department: true, jobTitle: true },
@@ -202,6 +202,43 @@ router.get("/today", authenticate, requireAdmin, async (req, res, next) => {
     });
 
     return res.json({ success: true, data: records });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/day", authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const parsed = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "date must be YYYY-MM-DD").safeParse(req.query.date);
+    if (!parsed.success) return fail(res, 400, parsed.error.errors[0].message);
+    const date = new Date(`${parsed.data}T00:00:00.000Z`);
+
+    const users = await prisma.user.findMany({
+      where: { companyId: req.user.companyId },
+      select: {
+        id: true,
+        loginId: true,
+        name: true,
+        department: true,
+        jobTitle: true,
+        attendance: { where: { date }, take: 1 },
+        leaveRequests: {
+          where: { status: "APPROVED", startDate: { lte: date }, endDate: { gte: date } },
+          select: { id: true },
+          take: 1,
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return res.json({
+      success: true,
+      data: users.map(({ attendance, leaveRequests, ...user }) => ({
+        user,
+        status: leaveRequests[0] ? "LEAVE" : attendance[0]?.status || "ABSENT",
+        attendance: attendance[0] || null,
+      })),
+    });
   } catch (err) {
     next(err);
   }
@@ -231,8 +268,8 @@ router.get("/", authenticate, requireAdmin, async (req, res, next) => {
     const end   = new Date(Date.UTC(year, mo, 1));
 
     // Confirm the target user exists
-    const user = await prisma.user.findUnique({
-      where:  { id: userId },
+    const user = await prisma.user.findFirst({
+      where:  { id: userId, companyId: req.user.companyId },
       select: { id: true, loginId: true, name: true },
     });
     if (!user) return fail(res, 404, "User not found.");

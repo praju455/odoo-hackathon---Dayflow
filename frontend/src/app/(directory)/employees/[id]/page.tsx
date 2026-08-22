@@ -6,7 +6,6 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import ProfileView from "@/components/directory/ProfileView";
-import Avatar from "@/components/ui/Avatar";
 import type { UserProfile } from "@/types/employee";
 
 export default function EmployeeProfilePage() {

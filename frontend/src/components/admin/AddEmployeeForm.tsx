@@ -52,9 +52,10 @@ export default function AddEmployeeForm() {
         tempPassword: res.data.tempPassword,
         name: res.data.employee.name,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { error?: string } }; message?: string };
       setError(
-        err.response?.data?.error || err.message || "Failed to create employee"
+        e.response?.data?.error || e.message || "Failed to create employee"
       );
     } finally {
       setLoading(false);

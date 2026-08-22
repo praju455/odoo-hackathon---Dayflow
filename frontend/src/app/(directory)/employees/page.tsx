@@ -6,25 +6,22 @@ import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import EmployeeCard from "@/components/directory/EmployeeCard";
 import type {
-  AttendanceRecord,
+  DayAttendanceRecord,
   DirectoryEmployee,
   EmployeeStatus,
-  LeaveRecord,
 } from "@/types/employee";
 
 // ─── Status computation ───────────────────────────────────────────────────────
 
 function computeStatus(
   empId: string,
-  attendance: AttendanceRecord[],
-  leaves: LeaveRecord[],
+  dayRecords: DayAttendanceRecord[],
+  canViewStatus: boolean,
 ): EmployeeStatus {
-  if (attendance.some((a) => a.userId === empId && a.status === "PRESENT")) {
-    return "present";
-  }
-  if (leaves.some((l) => l.userId === empId)) {
-    return "on-leave";
-  }
+  if (!canViewStatus) return "unknown";
+  const status = dayRecords.find((record) => record.user.id === empId)?.status;
+  if (status === "PRESENT" || status === "HALF_DAY") return "present";
+  if (status === "LEAVE") return "on-leave";
   return "absent";
 }
 
@@ -40,8 +37,7 @@ export default function EmployeesPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   const [employees, setEmployees] = useState<DirectoryEmployee[]>([]);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
+  const [dayRecords, setDayRecords] = useState<DayAttendanceRecord[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,43 +50,19 @@ export default function EmployeesPage() {
         setLoading(true);
         setError(null);
 
-        // ① Employee list — real API
         const empRes = await api.get<{ employees: DirectoryEmployee[] }>(
           "/employees",
         );
 
-        // ② Today's attendance — TODO: replace mock with real API
-        let att: AttendanceRecord[] = [];
-        try {
-          const attRes = await api.get<{ attendance: AttendanceRecord[] }>(
-            `/attendance?date=${today}`,
-          );
-          att = attRes.data.attendance ?? [];
-        } catch {
-          // Endpoint not yet available — use rich mock for demo
-          att = [
-            { id: "a1", userId: "emp-101", date: today, status: "PRESENT", checkIn: "09:00", checkOut: null },
-            { id: "a2", userId: "emp-102", date: today, status: "PRESENT", checkIn: "08:45", checkOut: null },
-          ]; // TODO: replace mock with real API
-        }
-
-        // ③ Today's approved leaves — TODO: replace mock with real API
-        let lv: LeaveRecord[] = [];
-        try {
-          const lvRes = await api.get<{ leaveRequests: LeaveRecord[] }>(
-            `/leave-requests?startDate=${today}&endDate=${today}&status=APPROVED`,
-          );
-          lv = lvRes.data.leaveRequests ?? [];
-        } catch {
-          // Endpoint not yet available — use rich mock for demo
-          lv = [
-            { id: "l1", userId: "emp-103", type: "VACATION", startDate: today, endDate: today, reason: "Vacation", status: "APPROVED" },
-          ]; // TODO: replace mock with real API
-        }
-
         setEmployees(empRes.data.employees);
-        setAttendance(att);
-        setLeaves(lv);
+        if (isAdmin) {
+          const statusRes = await api.get<{ data: DayAttendanceRecord[] }>(
+            `/attendance/day?date=${today}`,
+          );
+          setDayRecords(statusRes.data.data);
+        } else {
+          setDayRecords([]);
+        }
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : "Failed to load employees";
@@ -101,7 +73,7 @@ export default function EmployeesPage() {
     }
 
     fetchAll();
-  }, []);
+  }, [isAdmin]);
 
   // ─── Search filter ────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -208,7 +180,7 @@ export default function EmployeesPage() {
             <EmployeeCard
               key={emp.id}
               employee={emp}
-              status={computeStatus(emp.id, attendance, leaves)}
+              status={computeStatus(emp.id, dayRecords, isAdmin)}
             />
           ))}
         </div>

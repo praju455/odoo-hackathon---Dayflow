@@ -1,42 +1,49 @@
-// src/index.js
-// Dayflow HRMS — Express entry point
-// Member 1 owns auth & employee routes (added below when ready).
-// Member 2 owns attendance, leave, salary routes.
-
 const express = require("express");
 require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = Number(process.env.PORT || 4000);
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
 
-app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", frontendOrigin);
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+app.use(express.json({ limit: "1mb" }));
 
-// ── Health check ─────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// ── Member 1 routes (will be uncommented when Member 1 merges) ──
-// app.use("/api/auth",      require("./routes/auth"));
-// app.use("/api/employees", require("./routes/employees"));
-// app.use("/api/companies", require("./routes/companies"));
-
-// ── Member 2 routes ──────────────────────────────────────────
-app.use("/api/attendance",    require("./routes/attendance"));
-app.use("/api/leave",         require("./routes/leave"));
-app.use("/api/salary",        require("./routes/salary"));
-app.use("/api/analytics",     require("./routes/analytics"));
+app.use("/api/setup", require("./routes/setup"));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/employees", require("./routes/employees"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/attendance", require("./routes/attendance"));
+app.use("/api/leave", require("./routes/leave"));
+app.use("/api/salary", require("./routes/salary"));
+app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/notifications", require("./routes/notifications"));
 
-// ── Global error handler ──────────────────────────────────────
+app.use((_req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(err.status || 500).json({
-    success: false,
-    message: err.message || "Internal server error",
+    error: err.status ? err.message : "Internal server error",
   });
 });
 
-app.listen(port, () => {
-  console.log(`Dayflow backend running on port ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Dayflow backend running on http://localhost:${port}`);
+  });
+}
+
+module.exports = app;
