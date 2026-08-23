@@ -215,6 +215,11 @@ const iconMap = {
       <polyline points="22,6 12,13 2,6" />
     </svg>
   ),
+  "x-close": (props: IconProps) => (
+    <svg {...baseProps} {...props}>
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  ),
 };
 
 export const YuIcon = ({ name, ...props }: IconProps & { name: keyof typeof iconMap }) => {

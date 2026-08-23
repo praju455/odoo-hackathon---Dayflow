@@ -84,7 +84,7 @@ function ApplyModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: () =
       <div className="bg-field-on-canvas border border-[var(--border-default)] rounded-[16px] p-8 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-[18px] font-semibold text-primary">Request Leave</h2>
-          <button onClick={onClose} className="text-icon-muted hover:text-icon-strong"><YuIcon name="x" width={18} height={18} /></button>
+          <button onClick={onClose} className="text-icon-muted hover:text-icon-strong"><YuIcon name="x-close" width={18} height={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>

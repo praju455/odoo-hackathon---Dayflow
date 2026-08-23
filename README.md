@@ -39,6 +39,21 @@ Designed as a **local-first** application, Shiftly ensures that highly-sensitive
 
 ---
 
+## 🔑 Test Accounts (Demo)
+
+You can log in to the [Live Demo](https://odoo-hackathon-shiftly.vercel.app/) using either the **Email** or **Login ID** and the universal password `Dayflow123!`.
+
+**Admin Account**
+- **Email:** `admin@dayflow.local`
+- **Login ID:** `SFAVMO20260001`
+- **Role:** Admin (Access to all overviews, company projects, and employee management)
+
+**Employee Accounts (Examples)**
+- **Email:** `mason@shiftly.local` (Login ID: `SFMAAL20260004`) — Engineering
+- **Email:** `amara@shiftly.local` (Login ID: `SFAMDI20260021`) — Sales
+- **Email:** `ethan@dayflow.local` (Login ID: `SFETWI20260016`) — Finance
+
+---
 ## 🚀 Key Capabilities
 
 <table>
